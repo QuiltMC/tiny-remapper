@@ -51,10 +51,6 @@ spotless {
 	}
 }
 
-shadowJar {
-	archiveClassifier = "fat"
-}
-
 jar {
 	manifest {
 		attributes	"Implementation-Title": "TinyRemapper",
