@@ -37,6 +37,7 @@ import org.objectweb.asm.Opcodes;
 import net.fabricmc.tinyremapper.MemberInstance.MemberType;
 import net.fabricmc.tinyremapper.TinyRemapper.BridgePropagation;
 import net.fabricmc.tinyremapper.TinyRemapper.Direction;
+import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
 
 public final class ClassInstance {
 	ClassInstance(TinyRemapper context, boolean isInput, InputTag[] inputTags, Path srcFile, byte[] data) {
@@ -139,6 +140,10 @@ public final class ClassInstance {
 		return (access & Opcodes.ACC_INTERFACE) != 0;
 	}
 
+	public boolean isRecord() {
+		return (access & Opcodes.ACC_RECORD) != 0;
+	}
+
 	public boolean isPublicOrPrivate() {
 		return (access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE)) != 0;
 	}
@@ -164,7 +169,7 @@ public final class ClassInstance {
 	 * @param dir Futher propagation direction.
 	 */
 	void propagate(TinyRemapper remapper, MemberType type, String originatingCls, String idSrc, String nameDst,
-			Direction dir, boolean isVirtual, BridgePropagation bridgePropagation,
+			Direction dir, boolean isVirtual, boolean fromBridge,
 			boolean first, Set<ClassInstance> visitedUp, Set<ClassInstance> visitedDown) {
 		/*
 		 * initial private member or static method in interface: only local
@@ -184,7 +189,7 @@ public final class ClassInstance {
 					|| remapper.propagatePrivate
 					|| !remapper.forcePropagation.isEmpty() && remapper.forcePropagation.contains(name.replace('/', '.')+"."+member.name)) { // don't rename private members unless forced or initial (=dir any)
 
-				if (!member.setNewName(nameDst)) {
+				if (!member.setNewName(nameDst, fromBridge)) {
 					remapper.conflicts.computeIfAbsent(member, x -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(originatingCls+"/"+nameDst);
 				} else {
 					member.newNameOriginatingCls = originatingCls;
@@ -195,7 +200,7 @@ public final class ClassInstance {
 					&& ((member.access & Opcodes.ACC_PRIVATE) != 0 // private members don't propagate, but they may get skipped over by overriding virtual methods
 					|| type == MemberType.METHOD && isInterface() && !isVirtual)) { // non-virtual interface methods don't propagate either, the jvm only resolves direct accesses to them
 				return;
-			} else if (bridgePropagation != BridgePropagation.DISABLED
+			} else if (remapper.propagateBridges != LinkedMethodPropagation.DISABLED
 					&& member.cls.isInput
 					&& isVirtual
 					&& (member.access & Opcodes.ACC_BRIDGE) != 0) {
@@ -213,7 +218,7 @@ public final class ClassInstance {
 					visitedDownBridge.add(member.cls);
 
 					propagate(remapper, MemberType.METHOD, originatingCls, bridgeTarget.getId(), nameDst,
-							Direction.DOWN, true, bridgePropagation,
+							Direction.DOWN, true, remapper.propagateBridges == LinkedMethodPropagation.COMPATIBLE,
 							false, visitedUpBridge, visitedDownBridge);
 				}
 			}
@@ -246,7 +251,7 @@ public final class ClassInstance {
 			for (ClassInstance node : parents) {
 				if (visitedUp.add(node)) {
 					node.propagate(remapper, type, originatingCls, idSrc, nameDst,
-							Direction.UP, isVirtual, bridgePropagation,
+							Direction.UP, isVirtual, fromBridge,
 							false, visitedUp, visitedDown);
 				}
 			}
@@ -256,7 +261,7 @@ public final class ClassInstance {
 			for (ClassInstance node : children) {
 				if (visitedDown.add(node)) {
 					node.propagate(remapper, type, originatingCls, idSrc, nameDst,
-							Direction.DOWN, isVirtual, bridgePropagation,
+							Direction.DOWN, isVirtual, fromBridge,
 							false, visitedUp, visitedDown);
 				}
 			}

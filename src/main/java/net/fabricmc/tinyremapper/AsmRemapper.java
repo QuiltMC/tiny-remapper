@@ -21,7 +21,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.commons.Remapper;
 
 import net.fabricmc.tinyremapper.MemberInstance.MemberType;
-import net.fabricmc.tinyremapper.TinyRemapper.BridgePropagation;
+import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
 
 class AsmRemapper extends Remapper {
 	public AsmRemapper(TinyRemapper remapper) {
@@ -51,6 +51,11 @@ class AsmRemapper extends Remapper {
 		assert (newName = remapper.fieldMap.get(owner+"/"+MemberInstance.getFieldId(name, desc, remapper.ignoreFieldDesc))) == null || newName.equals(name);
 
 		return remapper.extraRemapper != null ? remapper.extraRemapper.mapFieldName(owner, name, desc) : name;
+	}
+
+	@Override
+	public String mapRecordComponentName(String owner, String name, String descriptor) {
+		return mapFieldName(owner, name, descriptor);
 	}
 
 	@Override
@@ -112,8 +117,11 @@ class AsmRemapper extends Remapper {
 	}
 
 	void finish(String className, ClassVisitor cv) {
-		if (remapper.propagateBridges == BridgePropagation.COMPATIBLE) {
-			ClassInstance cls = getClass(className);
+		ClassInstance cls = null;
+
+		if (remapper.propagateBridges == LinkedMethodPropagation.COMPATIBLE
+				|| remapper.propagateRecordComponents == LinkedMethodPropagation.COMPATIBLE) {
+			cls = getClass(className);
 
 			if (cls != null) {
 				BridgeHandler.generateCompatBridges(cls, this, cv);
