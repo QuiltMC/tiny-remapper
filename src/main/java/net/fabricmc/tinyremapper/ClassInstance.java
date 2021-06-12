@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016, 2018 Player, asie
+ * Copyright (C) 2021 QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -36,6 +37,7 @@ import org.objectweb.asm.Opcodes;
 
 import net.fabricmc.tinyremapper.MemberInstance.MemberType;
 import net.fabricmc.tinyremapper.TinyRemapper.Direction;
+import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
 
 public final class ClassInstance {
 	ClassInstance(TinyRemapper context, boolean isInput, InputTag[] inputTags, Path srcFile, byte[] data) {
@@ -44,10 +46,12 @@ public final class ClassInstance {
 		this.inputTags = inputTags;
 		this.srcPath = srcFile;
 		this.data = data;
+		this.mrjOrigin = this;
 	}
 
-	void init(String name, String superName, int access, String[] interfaces) {
+	void init(String name, int mrjVersion, String superName, int access, String[] interfaces) {
 		this.name = name;
+		this.mrjVersion = mrjVersion;
 		this.superName = superName;
 		this.access = access;
 		this.interfaces = interfaces;
@@ -130,6 +134,8 @@ public final class ClassInstance {
 		return name;
 	}
 
+	public int getMrjVersion() { return mrjVersion; }
+
 	public String getSuperName() {
 		return superName;
 	}
@@ -138,9 +144,15 @@ public final class ClassInstance {
 		return (access & Opcodes.ACC_INTERFACE) != 0;
 	}
 
+	public boolean isRecord() {
+		return (access & Opcodes.ACC_RECORD) != 0;
+	}
+
 	public boolean isPublicOrPrivate() {
 		return (access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE)) != 0;
 	}
+
+	public boolean isMrjCopy() { return mrjOrigin != this; }
 
 	public String[] getInterfaces() {
 		return interfaces;
@@ -154,15 +166,19 @@ public final class ClassInstance {
 		return members.get(id);
 	}
 
+	public ClassInstance getMrjOrigin() { return mrjOrigin; }
+
 	/**
 	 * Rename the member src to dst and continue propagating in dir.
 	 *
 	 * @param type Member type.
 	 * @param idSrc Existing name.
-	 * @param idDst New name.
+	 * @param nameDst New name.
 	 * @param dir Futher propagation direction.
 	 */
-	void propagate(TinyRemapper remapper, MemberType type, String originatingCls, String idSrc, String nameDst, Direction dir, boolean isVirtual, boolean first, Set<ClassInstance> visitedUp, Set<ClassInstance> visitedDown) {
+	void propagate(TinyRemapper remapper, MemberType type, String originatingCls, String idSrc, String nameDst,
+			Direction dir, boolean isVirtual, boolean fromBridge,
+			boolean first, Set<ClassInstance> visitedUp, Set<ClassInstance> visitedDown) {
 		/*
 		 * initial private member or static method in interface: only local
 		 * non-virtual: up to matching member (if not already in this), then down until matching again (exclusive)
@@ -181,7 +197,7 @@ public final class ClassInstance {
 					|| remapper.propagatePrivate
 					|| !remapper.forcePropagation.isEmpty() && remapper.forcePropagation.contains(name.replace('/', '.')+"."+member.name)) { // don't rename private members unless forced or initial (=dir any)
 
-				if (!member.setNewName(nameDst)) {
+				if (!member.setNewName(nameDst, fromBridge)) {
 					remapper.conflicts.computeIfAbsent(member, x -> Collections.newSetFromMap(new ConcurrentHashMap<>())).add(originatingCls+"/"+nameDst);
 				} else {
 					member.newNameOriginatingCls = originatingCls;
@@ -192,6 +208,27 @@ public final class ClassInstance {
 					&& ((member.access & Opcodes.ACC_PRIVATE) != 0 // private members don't propagate, but they may get skipped over by overriding virtual methods
 					|| type == MemberType.METHOD && isInterface() && !isVirtual)) { // non-virtual interface methods don't propagate either, the jvm only resolves direct accesses to them
 				return;
+			} else if (remapper.propagateBridges != LinkedMethodPropagation.DISABLED
+					&& member.cls.isInput
+					&& isVirtual
+					&& (member.access & Opcodes.ACC_BRIDGE) != 0) {
+				assert member.type == MemberType.METHOD;
+
+				// try to propagate bridge method mapping to the actual implementation
+
+				MemberInstance bridgeTarget = BridgeHandler.getTarget(member);
+
+				if (bridgeTarget != null) {
+					Set<ClassInstance> visitedUpBridge = Collections.newSetFromMap(new IdentityHashMap<>());
+					Set<ClassInstance> visitedDownBridge = Collections.newSetFromMap(new IdentityHashMap<>());
+
+					visitedUpBridge.add(member.cls);
+					visitedDownBridge.add(member.cls);
+
+					propagate(remapper, MemberType.METHOD, originatingCls, bridgeTarget.getId(), nameDst,
+							Direction.DOWN, true, remapper.propagateBridges == LinkedMethodPropagation.COMPATIBLE,
+							false, visitedUpBridge, visitedDownBridge);
+				}
 			}
 		} else { // member == null
 			assert !first && (type == MemberType.FIELD || !isInterface() || isVirtual);
@@ -221,7 +258,9 @@ public final class ClassInstance {
 		if (dir == Direction.ANY || dir == Direction.UP || isVirtual && member != null && (member.access & (Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE)) == 0) {
 			for (ClassInstance node : parents) {
 				if (visitedUp.add(node)) {
-					node.propagate(remapper, type, originatingCls, idSrc, nameDst, Direction.UP, isVirtual, false, visitedUp, visitedDown);
+					node.propagate(remapper, type, originatingCls, idSrc, nameDst,
+							Direction.UP, isVirtual, fromBridge,
+							false, visitedUp, visitedDown);
 				}
 			}
 		}
@@ -229,10 +268,116 @@ public final class ClassInstance {
 		if (dir == Direction.ANY || dir == Direction.DOWN || isVirtual && member != null && (member.access & (Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE)) == 0) {
 			for (ClassInstance node : children) {
 				if (visitedDown.add(node)) {
-					node.propagate(remapper, type, originatingCls, idSrc, nameDst, Direction.DOWN, isVirtual, false, visitedUp, visitedDown);
+					node.propagate(remapper, type, originatingCls, idSrc, nameDst,
+							Direction.DOWN, isVirtual, fromBridge,
+							false, visitedUp, visitedDown);
 				}
 			}
 		}
+	}
+
+	/**
+	 * Determine whether one type is assignable to another.
+	 *
+	 * <p>Primitive types including void need to be identical to match.
+	 */
+	static boolean isAssignableFrom(String superDesc, int superDescStart, String subDesc, int subDescStart, TinyRemapper context) {
+		char superType = superDesc.charAt(superDescStart);
+		char subType = subDesc.charAt(subDescStart);
+
+		// allow only same or object <- array
+		if (superType == '[') {
+			// require same array
+
+			do {
+				if (subType != '[') return false;
+
+				superType = superDesc.charAt(++superDescStart);
+				subType = subDesc.charAt(++subDescStart);
+			} while (superType == '[');
+
+			return superType == subType
+					&& (superType != 'L' || superDesc.regionMatches(superDescStart + 1, subDesc, subDescStart + 1, superDesc.indexOf(';', superDescStart + 1) + 1));
+		} else if (superType != 'L') {
+			return superType == subType;
+		} else if (subType != 'L' && subType != '[') {
+			return false;
+		}
+
+		// skip L
+		superDescStart++;
+		subDescStart++;
+
+		// everything is assignable to Object
+		if (superDesc.startsWith(objectClassName+";", superDescStart)) return true;
+
+		// non-object sub type can't match anymore
+		if (subType != 'L') return false;
+
+		int superDescEnd = superDesc.indexOf(';', superDescStart);
+		int subDescEnd = subDesc.indexOf(';', subDescStart);
+		int superDescLen = superDescEnd - superDescStart;
+
+		// check super == sub
+		if (superDescLen == subDescEnd - subDescStart
+				&& superDesc.regionMatches(superDescStart, subDesc, subDescStart, superDescLen)) {
+			return true;
+		}
+
+		// check super <- sub
+
+		String superName = superDesc.substring(superDescStart, superDescEnd);
+		String subName = subDesc.substring(subDescStart, subDescEnd);
+
+		ClassInstance superCls = context.classes.get(superName);
+		if (superCls != null && superCls.children.isEmpty()) return false;
+
+		ClassInstance subCls = context.classes.get(subName);
+
+		if (subCls != null) { // sub class known, search upwards
+			if (superCls == null || superCls.isInterface()) {
+				Set<ClassInstance> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+				Deque<ClassInstance> queue = new ArrayDeque<>();
+				visited.add(subCls);
+
+				do {
+					for (ClassInstance parent : subCls.parents) {
+						if (parent.name.equals(superName)) return true;
+
+						if (visited.add(parent)) {
+							queue.addLast(parent);
+						}
+					}
+				} while ((subCls = queue.pollFirst()) != null);
+			} else {
+				do {
+					String curSuperName = subCls.superName;
+
+					if (curSuperName.equals(superName)) return true;
+					if (curSuperName.equals(objectClassName)) return false;
+
+					subCls = context.classes.get(curSuperName);
+				} while (subCls != null);
+			}
+		} else if (superCls != null) { // only super class known, search down
+			Set<ClassInstance> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+			Deque<ClassInstance> queue = new ArrayDeque<>();
+			visited.add(superCls);
+
+			do {
+				for (ClassInstance child : superCls.children) {
+					if (child.name.equals(subName)) return true;
+
+					if (visited.add(child)) {
+						queue.addLast(child);
+					}
+				}
+			} while ((superCls = queue.pollFirst()) != null);
+		}
+
+		// no match or not enough information (incomplete class path)
+
+		return false;
 	}
 
 	public MemberInstance resolve(MemberType type, String id) {
@@ -441,11 +586,34 @@ public final class ClassInstance {
 		return ret;
 	}
 
+	ClassInstance constructMrjCopy() {
+		// isInput should be false, since the MRJ copy should not be emitted
+		ClassInstance copy = new ClassInstance(context, false, inputTags, srcPath, data);
+		copy.init(name, mrjVersion, superName, access, interfaces);
+		members.values().forEach(member ->
+				copy.addMember(new MemberInstance(member.type, copy, member.name, member.desc, member.access)));
+		// set the origin
+		copy.mrjOrigin = mrjOrigin;
+		return copy;
+	}
+
 	@Override
 	public String toString() {
 		return name;
 	}
 
+	public static String getMrjName(String clsName, int mrjVersion) {
+		if (mrjVersion != MRJ_DEFAULT) {
+			return MRJ_PREFIX + "/" + mrjVersion + "/" + clsName;
+		} else {
+			return clsName;
+		}
+	}
+
+	public static final int MRJ_DEFAULT = -1;
+	public static final String MRJ_PREFIX = "/META-INF/versions";
+
+	private static final String objectClassName = "java/lang/Object";
 	private static final MemberInstance nullMember = new MemberInstance(null, null, null, null, 0);
 	private static final AtomicReferenceFieldUpdater<ClassInstance, InputTag[]> inputTagsUpdater = AtomicReferenceFieldUpdater.newUpdater(ClassInstance.class, InputTag[].class, "inputTags");
 
@@ -454,11 +622,13 @@ public final class ClassInstance {
 	private volatile InputTag[] inputTags; // cow input tag list, null for none
 	final Path srcPath;
 	byte[] data;
+	private ClassInstance mrjOrigin;
 	private final Map<String, MemberInstance> members = new HashMap<>(); // methods and fields are distinct due to their different desc separators
 	private final ConcurrentMap<String, MemberInstance> resolvedMembers = new ConcurrentHashMap<>();
 	final Set<ClassInstance> parents = new HashSet<>();
 	final Set<ClassInstance> children = new HashSet<>();
 	private String name;
+	private int mrjVersion;
 	private String superName;
 	private int access;
 	private String[] interfaces;

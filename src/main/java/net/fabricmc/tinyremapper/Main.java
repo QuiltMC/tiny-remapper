@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016, 2018 Player, asie
+ * Copyright (C) 2021 QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -31,12 +32,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
+
 public class Main {
 	public static void main(String[] rawArgs) {
 		List<String> args = new ArrayList<String>(rawArgs.length);
 		boolean reverse = false;
 		boolean ignoreFieldDesc = false;
 		boolean propagatePrivate = false;
+		LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
 		boolean removeFrames = false;
 		Set<String> forcePropagation = Collections.emptySet();
 		File forcePropagationFile = null;
@@ -70,6 +74,17 @@ public class Main {
 					break;
 				case "propagateprivate":
 					propagatePrivate = true;
+					break;
+				case "propagatebridges":
+					switch (arg.substring(valueSepPos + 1).toLowerCase(Locale.ENGLISH)) {
+					case "disabled": propagateBridges = LinkedMethodPropagation.DISABLED; break;
+					case "enabled": propagateBridges = LinkedMethodPropagation.ENABLED; break;
+					case "compatible": propagateBridges = LinkedMethodPropagation.COMPATIBLE; break;
+					default:
+						System.out.println("invalid propagateBridges: "+arg.substring(valueSepPos + 1));
+						System.exit(1);
+					}
+
 					break;
 				case "removeframes":
 					removeFrames = true;
@@ -185,6 +200,7 @@ public class Main {
 				.ignoreFieldDesc(ignoreFieldDesc)
 				.withForcedPropagation(forcePropagation)
 				.propagatePrivate(propagatePrivate)
+				.propagateBridges(propagateBridges)
 				.removeFrames(removeFrames)
 				.ignoreConflicts(ignoreConflicts)
 				.checkPackageAccess(checkPackageAccess)

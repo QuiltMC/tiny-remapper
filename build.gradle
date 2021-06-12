@@ -2,7 +2,6 @@ plugins {
 	id "java"
 	id "maven-publish"
 	id "com.diffplug.spotless" version "5.10.2"
-	id "com.github.johnrengelman.shadow" version "6.1.0"
 	// TODO: Apply checkstyle
 }
 
@@ -28,6 +27,7 @@ dependencies {
 	implementation "org.ow2.asm:asm-commons:$asmVersion"
 	implementation "org.ow2.asm:asm-tree:$asmVersion"
 	implementation "org.ow2.asm:asm-util:$asmVersion"
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
 }
 
 java {
@@ -52,8 +52,13 @@ spotless {
 	}
 }
 
-shadowJar {
-	archiveClassifier = "fat"
+test {
+	useJUnitPlatform()
+	testLogging {
+		showStandardStreams = true
+		exceptionFormat = 'full'
+		events = ['passed', 'failed', 'skipped']
+	}
 }
 
 jar {
