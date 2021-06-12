@@ -27,6 +27,7 @@ dependencies {
 	implementation "org.ow2.asm:asm-commons:$asmVersion"
 	implementation "org.ow2.asm:asm-tree:$asmVersion"
 	implementation "org.ow2.asm:asm-util:$asmVersion"
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
 }
 
 java {
@@ -48,6 +49,15 @@ spotless {
 
 		// Use comma separator for openjdk like license headers
 		licenseHeaderFile(file("HEADER")).yearSeparator(", ")
+	}
+}
+
+test {
+	useJUnitPlatform()
+	testLogging {
+		showStandardStreams = true
+		exceptionFormat = 'full'
+		events = ['passed', 'failed', 'skipped']
 	}
 }
 
