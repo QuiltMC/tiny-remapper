@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2016, 2018 Player, asie
+ * Copyright (C) 2021 QuiltMC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package net.fabricmc.tinyremapper;
 
 import java.io.BufferedOutputStream;
@@ -43,7 +61,8 @@ public class MetaInfFixer implements OutputConsumerPath.ResourceRemapper {
 			}
 		} else if (remapper != null && relativePath.getNameCount() == 3 && relativePath.getName(1).toString().equals("services")) {
 			fileName = mapFullyQualifiedClassName(fileName, remapper);
-			Path newFile = destinationDirectory.resolve(relativePath).getParent().resolve(fileName);
+			Path newFile = destinationDirectory.resolve(relativePath).resolveSibling(fileName);
+			Files.createDirectories(newFile.getParent());
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 			     BufferedWriter writer = Files.newBufferedWriter(newFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
 				fixServiceDecl(reader, writer, remapper);
