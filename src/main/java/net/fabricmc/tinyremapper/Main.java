@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package net.fabricmc.tinyremapper;
 
 import java.io.BufferedReader;
@@ -39,7 +40,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true,
-        version = {"Tiny Remapper " + Main.getPackage().getImplementationVersion(),
+        version = {"Tiny Remapper " + Main.version == null ? "DEVELOP" : Main.version,
                 "Picocli " + picocli.CommandLine.VERSION,
                 "JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
                 "OS: ${os.name} ${os.version} ${os.arch}"},
@@ -47,6 +48,7 @@ import picocli.CommandLine.Parameters;
 public class Main implements Callable<Integer> {
     @Option(names = {"-V", "--version"}, versionHelp = true, description = "display version info")
     boolean versionInfoRequested;
+    public static String version = getClass().getPackage().getImplementationVersion();
 
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "display this help message")
     boolean usageHelpRequested;
@@ -92,79 +94,94 @@ public class Main implements Callable<Integer> {
             if (arg.startsWith("--")) {
                 int valueSepPos = arg.indexOf('=');
 
-                String argKey = valueSepPos == -1 ? arg.substring(2) : arg.substring(2, valueSepPos);
+                String argKey =
+                        valueSepPos == -1 ? arg.substring(2) : arg.substring(2, valueSepPos);
                 argKey = argKey.toLowerCase(Locale.ROOT);
 
                 switch (argKey.toLowerCase()) {
-                case "reverse":
-                    System.err.println("WARNING: --reverse is not currently implemented!");
-                    reverse = true;
-                    break;
-                case "ignorefielddesc":
-                    ignoreFieldDesc = true;
-                    break;
-                case "forcepropagation":
-                    forcePropagationFile = new File(arg.substring(valueSepPos + 1));
-                    break;
-                case "propagateprivate":
-                    propagatePrivate = true;
-                    break;
-                case "propagatebridges":
-                    switch (arg.substring(valueSepPos + 1).toLowerCase(Locale.ENGLISH)) {
-                    case "disabled": propagateBridges = LinkedMethodPropagation.DISABLED; break;
-                    case "enabled": propagateBridges = LinkedMethodPropagation.ENABLED; break;
-                    case "compatible": propagateBridges = LinkedMethodPropagation.COMPATIBLE; break;
-                    default:
-                        System.out.println("invalid propagateBridges: "+arg.substring(valueSepPos + 1));
-                        System.exit(1);
-                    }
+                    case "reverse":
+                        System.err.println("WARNING: --reverse is not currently implemented!");
+                        reverse = true;
+                        break;
+                    case "ignorefielddesc":
+                        ignoreFieldDesc = true;
+                        break;
+                    case "forcepropagation":
+                        forcePropagationFile = new File(arg.substring(valueSepPos + 1));
+                        break;
+                    case "propagateprivate":
+                        propagatePrivate = true;
+                        break;
+                    case "propagatebridges":
+                        switch (arg.substring(valueSepPos + 1).toLowerCase(Locale.ENGLISH)) {
+                            case "disabled":
+                                propagateBridges = LinkedMethodPropagation.DISABLED;
+                                break;
+                            case "enabled":
+                                propagateBridges = LinkedMethodPropagation.ENABLED;
+                                break;
+                            case "compatible":
+                                propagateBridges = LinkedMethodPropagation.COMPATIBLE;
+                                break;
+                            default:
+                                System.out.println("invalid propagateBridges: "
+                                        + arg.substring(valueSepPos + 1));
+                                System.exit(1);
+                        }
 
-                    break;
-                case "removeframes":
-                    removeFrames = true;
-                    break;
-                case "ignoreconflicts":
-                    ignoreConflicts = true;
-                    break;
-                case "checkpackageaccess":
-                    checkPackageAccess = true;
-                    break;
-                case "fixpackageaccess":
-                    fixPackageAccess = true;
-                    break;
-                case "resolvemissing":
-                    resolveMissing = true;
-                    break;
-                case "rebuildsourcefilenames":
-                    rebuildSourceFilenames = true;
-                    break;
-                case "skiplocalvariablemapping":
-                    skipLocalVariableMapping = true;
-                    break;
-                case "renameinvalidlocals":
-                    renameInvalidLocals = true;
-                    break;
-                case "nonclasscopymode":
-                    switch (arg.substring(valueSepPos + 1).toLowerCase(Locale.ENGLISH)) {
-                    case "unchanged": ncCopyMode = NonClassCopyMode.UNCHANGED; break;
-                    case "fixmeta": ncCopyMode = NonClassCopyMode.FIX_META_INF; break;
-                    case "skipmeta": ncCopyMode = NonClassCopyMode.SKIP_META_INF; break;
-                    default:
-                        System.out.println("invalid nonClassCopyMode: "+arg.substring(valueSepPos + 1));
-                        System.exit(1);
-                    }
+                        break;
+                    case "removeframes":
+                        removeFrames = true;
+                        break;
+                    case "ignoreconflicts":
+                        ignoreConflicts = true;
+                        break;
+                    case "checkpackageaccess":
+                        checkPackageAccess = true;
+                        break;
+                    case "fixpackageaccess":
+                        fixPackageAccess = true;
+                        break;
+                    case "resolvemissing":
+                        resolveMissing = true;
+                        break;
+                    case "rebuildsourcefilenames":
+                        rebuildSourceFilenames = true;
+                        break;
+                    case "skiplocalvariablemapping":
+                        skipLocalVariableMapping = true;
+                        break;
+                    case "renameinvalidlocals":
+                        renameInvalidLocals = true;
+                        break;
+                    case "nonclasscopymode":
+                        switch (arg.substring(valueSepPos + 1).toLowerCase(Locale.ENGLISH)) {
+                            case "unchanged":
+                                ncCopyMode = NonClassCopyMode.UNCHANGED;
+                                break;
+                            case "fixmeta":
+                                ncCopyMode = NonClassCopyMode.FIX_META_INF;
+                                break;
+                            case "skipmeta":
+                                ncCopyMode = NonClassCopyMode.SKIP_META_INF;
+                                break;
+                            default:
+                                System.out.println("invalid nonClassCopyMode: "
+                                        + arg.substring(valueSepPos + 1));
+                                System.exit(1);
+                        }
 
-                    break;
-                case "threads":
-                    threads = Integer.parseInt(arg.substring(valueSepPos + 1));
-                    if (threads <= 0) {
-                        System.out.println("Thread count must be > 0");
+                        break;
+                    case "threads":
+                        threads = Integer.parseInt(arg.substring(valueSepPos + 1));
+                        if (threads <= 0) {
+                            System.out.println("Thread count must be > 0");
+                            System.exit(1);
+                        }
+                        break;
+                    default:
+                        System.out.println("invalid argument: " + arg + ".");
                         System.exit(1);
-                    }
-                    break;
-                default:
-                    System.out.println("invalid argument: "+arg+".");
-                    System.exit(1);
                 }
             } else {
                 args.add(arg);
@@ -172,13 +189,14 @@ public class Main implements Callable<Integer> {
         }
 
         if (args.size() < 5) {
-            System.out.println("usage: <input> <output> <mappings> <from> <to> [<classpath>]... [--reverse] [--forcePropagation=<file>] [--propagatePrivate] [--ignoreConflicts]");
+            System.out.println(
+                    "usage: <input> <output> <mappings> <from> <to> [<classpath>]... [--reverse] [--forcePropagation=<file>] [--propagatePrivate] [--ignoreConflicts]");
             System.exit(1);
         }
 
         Path input = Paths.get(args.get(0));
         if (!Files.isReadable(input)) {
-            System.out.println("Can't read input file "+input+".");
+            System.out.println("Can't read input file " + input + ".");
             System.exit(1);
         }
 
@@ -186,7 +204,7 @@ public class Main implements Callable<Integer> {
 
         Path mappings = Paths.get(args.get(2));
         if (!Files.isReadable(mappings) || Files.isDirectory(mappings)) {
-            System.out.println("Can't read mappings file "+mappings+".");
+            System.out.println("Can't read mappings file " + mappings + ".");
             System.exit(1);
         }
 
@@ -198,7 +216,7 @@ public class Main implements Callable<Integer> {
         for (int i = 0; i < classpath.length; i++) {
             classpath[i] = Paths.get(args.get(i + 5));
             if (!Files.isReadable(classpath[i])) {
-                System.out.println("Can't read classpath file "+i+": "+classpath[i]+".");
+                System.out.println("Can't read classpath file " + i + ": " + classpath[i] + ".");
                 System.exit(1);
             }
         }
@@ -207,7 +225,8 @@ public class Main implements Callable<Integer> {
             forcePropagation = new HashSet<>();
 
             if (!forcePropagationFile.canRead()) {
-                System.out.println("Can't read forcePropagation file "+forcePropagationFile+".");
+                System.out
+                        .println("Can't read forcePropagation file " + forcePropagationFile + ".");
                 System.exit(1);
             }
 
@@ -217,7 +236,8 @@ public class Main implements Callable<Integer> {
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
 
-                    if (line.isEmpty() || line.charAt(0) == '#') continue;
+                    if (line.isEmpty() || line.charAt(0) == '#')
+                        continue;
 
                     forcePropagation.add(line);
                 }
