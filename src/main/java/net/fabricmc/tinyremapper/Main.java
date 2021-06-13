@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package net.fabricmc.tinyremapper;
 
 import java.io.BufferedReader;
@@ -31,28 +30,63 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+import picocli.CommandLine.Parameters;
 
-public class Main {
+@Command(name = "tiny-remapper", mixinStandardHelpOptions = true,
+		version = {"Tiny Remapper " + Main.getPackage().getImplementationVersion(),
+				"Picocli " + picocli.CommandLine.VERSION,
+				"JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
+				"OS: ${os.name} ${os.version} ${os.arch}"},
+		description = "A tool for remapping JAR files using \"Tiny\"-format mappings")
+public class Main implements Callable<Integer> {
+	@Option(names = {"-V", "--version"}, versionHelp = true, description = "display version info")
+	boolean versionInfoRequested;
+
+	@Option(names = {"-h", "--help"}, usageHelp = true, description = "display this help message")
+	boolean usageHelpRequested;
+
+	@Option(names = "--reverse",
+			description = "Reverse the mapping. @|bold,underline,yellow NOT YET IMPLEMENTED!|@")
+	boolean reverse = false;
+
+	boolean ignoreFieldDesc = false;
+
+	boolean propagatePrivate = false;
+
+	LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
+
+	boolean removeFrames = false;
+
+	Set<String> forcePropagation = Collections.emptySet();
+
+	File forcePropagationFile = null;
+
+	boolean ignoreConflicts = false;
+
+	boolean checkPackageAccess = false;
+
+	boolean fixPackageAccess = false;
+
+	boolean resolveMissing = false;
+
+	boolean rebuildSourceFilenames = false;
+
+	boolean skipLocalVariableMapping = false;
+
+	boolean renameInvalidLocals = false;
+
+	NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
+
+	int threads = -1;
+
 	public static void main(String[] rawArgs) {
 		List<String> args = new ArrayList<String>(rawArgs.length);
-		boolean reverse = false;
-		boolean ignoreFieldDesc = false;
-		boolean propagatePrivate = false;
-		LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
-		boolean removeFrames = false;
-		Set<String> forcePropagation = Collections.emptySet();
-		File forcePropagationFile = null;
-		boolean ignoreConflicts = false;
-		boolean checkPackageAccess = false;
-		boolean fixPackageAccess = false;
-		boolean resolveMissing = false;
-		boolean rebuildSourceFilenames = false;
-		boolean skipLocalVariableMapping = false;
-		boolean renameInvalidLocals = false;
-		NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
-		int threads = -1;
 
 		for (String arg : rawArgs) {
 			if (arg.startsWith("--")) {
