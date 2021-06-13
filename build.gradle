@@ -28,6 +28,17 @@ dependencies {
 	implementation "org.ow2.asm:asm-tree:$asmVersion"
 	implementation "org.ow2.asm:asm-util:$asmVersion"
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
+
+	// CLI tool
+	def picocliVersion = "4.6.1"
+
+	implementation "info.picocli:picocli:$picocliVersion"
+	annotationProcessor "info.picocli:picocli-codegen:$picocliVersion"
+}
+
+compileJava {
+	// For PicoCLI annotation processor
+    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
 }
 
 java {
