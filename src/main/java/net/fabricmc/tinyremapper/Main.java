@@ -206,102 +206,6 @@ public class Main implements Callable<Integer> {
     public static void main(String[] rawArgs) {
         List<String> args = new ArrayList<String>(rawArgs.length);
 
-        // for (String arg : rawArgs) {
-        // if (arg.startsWith("--")) {
-        // int valueSepPos = arg.indexOf('=');
-
-        // String argKey =
-        // valueSepPos == -1 ? arg.substring(2) : arg.substring(2, valueSepPos);
-        // argKey = argKey.toLowerCase(Locale.ROOT);
-
-        // switch (argKey.toLowerCase()) {
-        // case "reverse":
-        // System.err.println("WARNING: --reverse is not currently implemented!");
-        // reverse = true;
-        // break;
-        // case "ignorefielddesc":
-        // ignoreFieldDesc = true;
-        // break;
-        // case "forcepropagation":
-        // forcePropagationFile = new File(arg.substring(valueSepPos + 1));
-        // break;
-        // case "propagateprivate":
-        // propagatePrivate = true;
-        // break;
-        // case "propagatebridges":
-        // switch (arg.substring(valueSepPos + 1).toLowerCase(Locale.ENGLISH)) {
-        // case "disabled":
-        // propagateBridges = LinkedMethodPropagation.DISABLED;
-        // break;
-        // case "enabled":
-        // propagateBridges = LinkedMethodPropagation.ENABLED;
-        // break;
-        // case "compatible":
-        // propagateBridges = LinkedMethodPropagation.COMPATIBLE;
-        // break;
-        // default:
-        // System.out.println("invalid propagateBridges: "
-        // + arg.substring(valueSepPos + 1));
-        // System.exit(1);
-        // }
-        // break;
-        // case "removeframes":
-        // removeFrames = true;
-        // break;
-        // case "ignoreconflicts":
-        // ignoreConflicts = true;
-        // break;
-        // case "checkpackageaccess":
-        // checkPackageAccess = true;
-        // break;
-        // case "fixpackageaccess":
-        // fixPackageAccess = true;
-        // break;
-        // case "resolvemissing":
-        // resolveMissing = true;
-        // break;
-        // case "rebuildsourcefilenames":
-        // rebuildSourceFilenames = true;
-        // break;
-        // case "skiplocalvariablemapping":
-        // skipLocalVariableMapping = true;
-        // break;
-        // case "renameinvalidlocals":
-        // renameInvalidLocals = true;
-        // break;
-        // case "nonclasscopymode":
-        // switch (arg.substring(valueSepPos + 1).toLowerCase(Locale.ENGLISH)) {
-        // case "unchanged":
-        // ncCopyMode = NonClassCopyMode.UNCHANGED;
-        // break;
-        // case "fixmeta":
-        // ncCopyMode = NonClassCopyMode.FIX_META_INF;
-        // break;
-        // case "skipmeta":
-        // ncCopyMode = NonClassCopyMode.SKIP_META_INF;
-        // break;
-        // default:
-        // System.out.println("invalid nonClassCopyMode: "
-        // + arg.substring(valueSepPos + 1));
-        // System.exit(1);
-        // }
-        // break;
-        // case "threads":
-        // threads = Integer.parseInt(arg.substring(valueSepPos + 1));
-        // if (threads <= 0) {
-        // System.out.println("Thread count must be > 0");
-        // System.exit(1);
-        // }
-        // break;
-        // default:
-        // System.out.println("invalid argument: " + arg + ".");
-        // System.exit(1);
-        // }
-        // } else {
-        // args.add(arg);
-        // }
-        // }
-
         if (args.size() < 5) {
             System.out.println(
                     "usage: <input> <output> <mappings> <from> <to> [<classpath>]... [--reverse] [--forcePropagation=<file>] [--propagatePrivate] [--ignoreConflicts]");
@@ -334,33 +238,6 @@ public class Main implements Callable<Integer> {
                 System.exit(1);
             }
         }
-
-        // if (forcePropagationFile != null) {
-        // forcePropagation = new HashSet<>();
-
-        // if (!forcePropagationFile.canRead()) {
-        // System.out
-        // .println("Can't read forcePropagation file " + forcePropagationFile + ".");
-        // System.exit(1);
-        // }
-
-        // try (BufferedReader reader = new BufferedReader(new FileReader(forcePropagationFile))) {
-        // String line;
-
-        // while ((line = reader.readLine()) != null) {
-        // line = line.trim();
-
-        // if (line.isEmpty() || line.charAt(0) == '#') {
-        // continue;
-        // }
-
-        // forcePropagation.add(line);
-        // }
-        // } catch (IOException e) {
-        // e.printStackTrace();
-        // System.exit(1);
-        // }
-        // }
 
         long startTime = System.nanoTime();
 
