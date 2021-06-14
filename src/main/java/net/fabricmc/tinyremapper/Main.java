@@ -114,12 +114,17 @@ public class Main implements Callable<Integer> {
     // Classpath
     Path[] classpath;
 
+    /**
+     * Set the classpath variable and validate.
+     *
+     * @param value input paths from the user
+     */
     @Parameters(index = "5..*", description = "Additional files to add to the classpath.")
     private void setClasspath(Path[] value) {
         classpath = new Path[value.length];
         for (int i = 0; i < value.length; i++) {
             classpath[i] = value[i];
-            if (!Files.isReadable(value[i]) {
+            if (!Files.isReadable(value[i])) {
                 throw new ParameterException(spec.commandLine(),
                         "Cannot read classpath file " + value[i] + ".");
             }
@@ -278,21 +283,30 @@ public class Main implements Callable<Integer> {
                     + "Defaults to the number of CPU cores available.")
     int threads = -1;
 
-    public static void main(String[] rawArgs) {
-        List<String> args = new ArrayList<String>(rawArgs.length);
-
+    /**
+     * The main function of the CLI.
+     *
+     * @return exit code
+     */
+    public Integer call() throws Exception {
         long startTime = System.nanoTime();
 
         TinyRemapper remapper = TinyRemapper.newRemapper()
-                .withMappings(TinyUtils.createTinyMappingProvider(mappings, fromM, toM))
-                .ignoreFieldDesc(ignoreFieldDesc).withForcedPropagation(forcePropagation)
-                .propagatePrivate(propagatePrivate).propagateBridges(propagateBridges)
+                .withMappings(TinyUtils.createTinyMappingProvider(mappings, fromMapping, toMapping))
+                .ignoreFieldDesc(ignoreFieldDesc)
+                .withForcedPropagation(forcePropagation)
+                .propagatePrivate(propagatePrivate)
+                .propagateBridges(propagateBridges)
                 .removeFrames(removeFrames)
-                .ignoreConflicts(ignoreConflicts).checkPackageAccess(checkPackageAccess)
-                .fixPackageAccess(fixPackageAccess).resolveMissing(resolveMissing)
+                .ignoreConflicts(ignoreConflicts)
+                .checkPackageAccess(checkPackageAccess)
+                .fixPackageAccess(fixPackageAccess)
+                .resolveMissing(resolveMissing)
                 .rebuildSourceFilenames(rebuildSourceFilenames)
                 .skipLocalVariableMapping(skipLocalVariableMapping)
-                .renameInvalidLocals(renameInvalidLocals).threads(threads).build();
+                .renameInvalidLocals(renameInvalidLocals)
+                .threads(threads)
+                .build();
 
         try (OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(output).build()) {
             outputConsumer.addNonClassFiles(input, ncCopyMode, remapper);
@@ -308,5 +322,22 @@ public class Main implements Callable<Integer> {
         }
 
         System.out.printf("Finished after %.2f ms.\n", (System.nanoTime() - startTime) / 1e6);
+        return 0;
+    }
+
+    /**
+     * Validate some of the command line options using JSR-380.
+     */
+    private void validate() {
+        Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+        Set<ConstraintViolation<User>> violations = validator.validate(this);
+
+        if (!violations.isEmpty()) {
+            String errorMsg = "";
+            for (ConstraintViolation<User> violation : violations) {
+                errorMsg += "ERROR: " + violation.getMessage() + "\n";
+            }
+            throw new ParameterException(spec.commandLine(), errorMsg);
+        }
     }
 }
