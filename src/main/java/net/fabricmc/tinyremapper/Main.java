@@ -57,9 +57,78 @@ import picocli.CommandLine.Parameters;
     usageHelpAutoWidth = true)
 public class Main implements Callable<Integer> {
     /* @formatter:on */
+
+    /*
+     * ================== PicoCLI stuff =====================
+     */
     @Spec
     CommandSpec spec; // injected by picocli
 
+    /*
+     * ================== Input parameters ==================
+     */
+
+    // Input file
+    Path input;
+
+    /**
+     * Set the input path variable and validate.
+     *
+     * @param value input path from the user
+     */
+    @Parameters(index = "0", description = "Path to input file to remap.", required = true)
+    private void setInput(Path value) {
+        if (!Files.isReadable(input)) {
+            throw new ParameterException(spec.commandLine(),
+                    "Cannot read input file " + value + ".");
+        }
+        input = value;
+    }
+
+    @Parameters(index = "1", description = "Path to output remapped file.", required = true)
+    Path output;
+
+    // Mappings file
+    Path mappings;
+
+    /**
+     * Set the mappings path variable and validate.
+     *
+     * @param value input path from the user
+     */
+    @Parameters(index = "2", description = "Path to mappings file.", required = true)
+    private void setMappings(Path value) {
+        if (!Files.isReadable(input)) {
+            throw new ParameterException(spec.commandLine(),
+                    "Cannot read mappings file " + value + ".");
+        }
+        mappings = value;
+    }
+
+    @Parameters(index = "3", description = "Namespace to map from.", required = true)
+    String fromMapping;
+
+    @Parameters(index = "4", description = "Namespace to map to.", required = true)
+    String toMapping;
+
+    // Classpath
+    Path[] classpath;
+
+    @Parameters(index = "5..*", description = "Additional files to add to the classpath.")
+    private void setClasspath(Path[] value) {
+        classpath = new Path[value.length];
+        for (Path p : value) {
+            classpath[i] = p;
+            if (!Files.isReadable(p) {
+                throw new ParameterException(spec.commandLine(),
+                        "Cannot read classpath file " + p + ".");
+            }
+        }
+    }
+
+    /*
+     * ================== Options and switches ==============
+     */
     @Option(names = {"-V", "--version"}, versionHelp = true, description = "Display version info")
     boolean versionInfoRequested;
     public static String version = getClass().getPackage().getImplementationVersion();
@@ -75,18 +144,17 @@ public class Main implements Callable<Integer> {
             description = "Ignore the field descriptions in mappings.")
     boolean ignoreFieldDesc = false;
 
+    // Force propagation option
     Set<String> forcePropagation = Collections.emptySet();
 
     /**
      * Set the forcePropagation variable and validate.
      *
-     * @param value input file from the user
+     * @param forcePropagationFile input file from the user
      */
     @Option(names = "--force-propagation",
             description = "A file with methods to force propagation to.")
-    public void setForcePropagation(String value) {
-        File forcePropagationFile = new File(value);
-
+    public void setForcePropagation(File forcePropagationFile) {
         if (forcePropagationFile != null) {
             forcePropagation = new HashSet<>();
 
@@ -119,6 +187,7 @@ public class Main implements Callable<Integer> {
             description = "Propagate mappings to private methods.")
     boolean propagatePrivate = false;
 
+    // Propagate bridges option
     LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
 
     /**
@@ -175,8 +244,14 @@ public class Main implements Callable<Integer> {
     @Option(names = "--rename-invalid-locals", description = "Rename invalid local variables.")
     boolean renameInvalidLocals = false;
 
+    // Non-class file copy mode option
     NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
 
+    /**
+     * Set the setNonClassCopyMode variable and validate.
+     *
+     * @param value input from the user
+     */
     @Option(names = "--non-class-copy-mode",
             description = "How to deal with non-class files in a JAR. "
                     + "Must be one of \"unchanged\", \"fixmeta\", or \"skipmeta\".")
@@ -212,32 +287,32 @@ public class Main implements Callable<Integer> {
             System.exit(1);
         }
 
-        Path input = Paths.get(args.get(0));
-        if (!Files.isReadable(input)) {
-            System.out.println("Can't read input file " + input + ".");
-            System.exit(1);
-        }
+        // Path input = Paths.get(args.get(0));
+        // if (!Files.isReadable(input)) {
+        // System.out.println("Can't read input file " + input + ".");
+        // System.exit(1);
+        // }
 
-        Path output = Paths.get(args.get(1));
+        // Path output = Paths.get(args.get(1));
 
-        Path mappings = Paths.get(args.get(2));
-        if (!Files.isReadable(mappings) || Files.isDirectory(mappings)) {
-            System.out.println("Can't read mappings file " + mappings + ".");
-            System.exit(1);
-        }
+        // Path mappings = Paths.get(args.get(2));
+        // if (!Files.isReadable(mappings) || Files.isDirectory(mappings)) {
+        // System.out.println("Can't read mappings file " + mappings + ".");
+        // System.exit(1);
+        // }
 
-        String fromM = args.get(3);
-        String toM = args.get(4);
+        // String fromM = args.get(3);
+        // String toM = args.get(4);
 
-        Path[] classpath = new Path[args.size() - 5];
+        // Path[] classpath = new Path[args.size() - 5];
 
-        for (int i = 0; i < classpath.length; i++) {
-            classpath[i] = Paths.get(args.get(i + 5));
-            if (!Files.isReadable(classpath[i])) {
-                System.out.println("Can't read classpath file " + i + ": " + classpath[i] + ".");
-                System.exit(1);
-            }
-        }
+        // for (int i = 0; i < classpath.length; i++) {
+        //     classpath[i] = Paths.get(args.get(i + 5));
+        //     if (!Files.isReadable(classpath[i])) {
+        //         System.out.println("Can't read classpath file " + i + ": " + classpath[i] + ".");
+        //         System.exit(1);
+        //     }
+        // }
 
         long startTime = System.nanoTime();
 
