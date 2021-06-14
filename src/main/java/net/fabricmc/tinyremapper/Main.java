@@ -117,11 +117,11 @@ public class Main implements Callable<Integer> {
     @Parameters(index = "5..*", description = "Additional files to add to the classpath.")
     private void setClasspath(Path[] value) {
         classpath = new Path[value.length];
-        for (Path p : value) {
-            classpath[i] = p;
-            if (!Files.isReadable(p) {
+        for (int i = 0; i < value.length; i++) {
+            classpath[i] = value[i];
+            if (!Files.isReadable(value[i]) {
                 throw new ParameterException(spec.commandLine(),
-                        "Cannot read classpath file " + p + ".");
+                        "Cannot read classpath file " + value[i] + ".");
             }
         }
     }
@@ -280,39 +280,6 @@ public class Main implements Callable<Integer> {
 
     public static void main(String[] rawArgs) {
         List<String> args = new ArrayList<String>(rawArgs.length);
-
-        if (args.size() < 5) {
-            System.out.println(
-                    "usage: <input> <output> <mappings> <from> <to> [<classpath>]... [--reverse] [--forcePropagation=<file>] [--propagatePrivate] [--ignoreConflicts]");
-            System.exit(1);
-        }
-
-        // Path input = Paths.get(args.get(0));
-        // if (!Files.isReadable(input)) {
-        // System.out.println("Can't read input file " + input + ".");
-        // System.exit(1);
-        // }
-
-        // Path output = Paths.get(args.get(1));
-
-        // Path mappings = Paths.get(args.get(2));
-        // if (!Files.isReadable(mappings) || Files.isDirectory(mappings)) {
-        // System.out.println("Can't read mappings file " + mappings + ".");
-        // System.exit(1);
-        // }
-
-        // String fromM = args.get(3);
-        // String toM = args.get(4);
-
-        // Path[] classpath = new Path[args.size() - 5];
-
-        // for (int i = 0; i < classpath.length; i++) {
-        //     classpath[i] = Paths.get(args.get(i + 5));
-        //     if (!Files.isReadable(classpath[i])) {
-        //         System.out.println("Can't read classpath file " + i + ": " + classpath[i] + ".");
-        //         System.exit(1);
-        //     }
-        // }
 
         long startTime = System.nanoTime();
 
