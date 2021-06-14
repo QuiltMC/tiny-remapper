@@ -284,7 +284,7 @@ public class Main implements Callable<Integer> {
     @Option(names = "--threads",
             description = "Number of threads to use while remapping. "
                     + "Defaults to the number of CPU cores available.")
-    private static void setThreads(int input) {
+    private void setThreads(int input) {
         if (input <= 0) {
             throw new ParameterException(spec.commandLine(), "Threads must be greater than 0.");
         }
