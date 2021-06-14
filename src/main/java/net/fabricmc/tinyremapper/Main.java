@@ -45,11 +45,12 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.Spec;
 
 
 /* @formatter:off - eclipse formatter doesn't seem to like annotations */
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true, version = {
-    "Tiny Remapper " + Main.version == null ? "DEVELOP" : Main.version,
+    "Tiny Remapper " + "0.4.1",
     "Picocli " + picocli.CommandLine.VERSION,
     "JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
     "OS: ${os.name} ${os.version} ${os.arch}"},
@@ -57,13 +58,11 @@ import picocli.CommandLine.Parameters;
     usageHelpAutoWidth = true)
 public class Main implements Callable<Integer> {
     /* @formatter:on */
-    public static String version = Main.class.getPackage().getImplementationVersion();
 
     /*
      * ================== PicoCLI stuff =====================
      */
-    @Spec
-    private CommandSpec spec; // injected by picocli
+    @Spec CommandSpec spec; // injected by picocli
 
     /*
      * ================== Input parameters ==================
