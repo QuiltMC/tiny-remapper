@@ -340,4 +340,14 @@ public class Main implements Callable<Integer> {
             throw new ParameterException(spec.commandLine(), errorMsg);
         }
     }
+
+    /**
+     * Main runner function.
+     *
+     * @param args args from the user
+     */
+    public static void main(String... args) {
+        int exitCode = new CommandLine(new Main()).execute(args);
+        System.exit(exitCode);
+    }
 }
