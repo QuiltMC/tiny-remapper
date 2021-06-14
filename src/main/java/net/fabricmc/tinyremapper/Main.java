@@ -76,7 +76,7 @@ public class Main implements Callable<Integer> {
      *
      * @param value input path from the user
      */
-    @Parameters(index = "0", description = "Path to input file to remap.", required = true)
+    @Parameters(index = "0", description = "Path to input file to remap.")
     private void setInput(Path value) {
         if (!Files.isReadable(input)) {
             throw new ParameterException(spec.commandLine(),
@@ -85,7 +85,7 @@ public class Main implements Callable<Integer> {
         input = value;
     }
 
-    @Parameters(index = "1", description = "Path to output remapped file.", required = true)
+    @Parameters(index = "1", description = "Path to output remapped file.")
     private Path output;
 
     // Mappings file
@@ -96,7 +96,7 @@ public class Main implements Callable<Integer> {
      *
      * @param value input path from the user
      */
-    @Parameters(index = "2", description = "Path to mappings file.", required = true)
+    @Parameters(index = "2", description = "Path to mappings file.")
     private void setMappings(Path value) {
         if (!Files.isReadable(input)) {
             throw new ParameterException(spec.commandLine(),
@@ -105,10 +105,10 @@ public class Main implements Callable<Integer> {
         mappings = value;
     }
 
-    @Parameters(index = "3", description = "Namespace to map from.", required = true)
+    @Parameters(index = "3", description = "Namespace to map from.")
     private String fromMapping;
 
-    @Parameters(index = "4", description = "Namespace to map to.", required = true)
+    @Parameters(index = "4", description = "Namespace to map to.")
     private String toMapping;
 
     // Classpath
@@ -134,12 +134,6 @@ public class Main implements Callable<Integer> {
     /*
      * ================== Options and switches ==============
      */
-    @Option(names = {"-V", "--version"}, versionHelp = true, description = "Display version info")
-    private boolean versionInfoRequested;
-
-    @Option(names = {"-h", "--help"}, usageHelp = true, description = "Display this help message")
-    private boolean usageHelpRequested;
-
     @Option(names = "--reverse",
             description = "Reverse the mapping. @|bold,underline,yellow NOT YET IMPLEMENTED!|@")
     private boolean reverse = false;
