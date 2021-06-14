@@ -57,19 +57,20 @@ import picocli.CommandLine.Parameters;
     usageHelpAutoWidth = true)
 public class Main implements Callable<Integer> {
     /* @formatter:on */
+    public static String version = getClass().getPackage().getImplementationVersion();
 
     /*
      * ================== PicoCLI stuff =====================
      */
     @Spec
-    CommandSpec spec; // injected by picocli
+    private CommandSpec spec; // injected by picocli
 
     /*
      * ================== Input parameters ==================
      */
 
     // Input file
-    Path input;
+    private Path input;
 
     /**
      * Set the input path variable and validate.
@@ -86,10 +87,10 @@ public class Main implements Callable<Integer> {
     }
 
     @Parameters(index = "1", description = "Path to output remapped file.", required = true)
-    Path output;
+    private Path output;
 
     // Mappings file
-    Path mappings;
+    private Path mappings;
 
     /**
      * Set the mappings path variable and validate.
@@ -106,13 +107,13 @@ public class Main implements Callable<Integer> {
     }
 
     @Parameters(index = "3", description = "Namespace to map from.", required = true)
-    String fromMapping;
+    private String fromMapping;
 
     @Parameters(index = "4", description = "Namespace to map to.", required = true)
-    String toMapping;
+    private String toMapping;
 
     // Classpath
-    Path[] classpath;
+    private Path[] classpath;
 
     /**
      * Set the classpath variable and validate.
@@ -135,22 +136,21 @@ public class Main implements Callable<Integer> {
      * ================== Options and switches ==============
      */
     @Option(names = {"-V", "--version"}, versionHelp = true, description = "Display version info")
-    boolean versionInfoRequested;
-    public static String version = getClass().getPackage().getImplementationVersion();
+    private boolean versionInfoRequested;
 
     @Option(names = {"-h", "--help"}, usageHelp = true, description = "Display this help message")
-    boolean usageHelpRequested;
+    private boolean usageHelpRequested;
 
     @Option(names = "--reverse",
             description = "Reverse the mapping. @|bold,underline,yellow NOT YET IMPLEMENTED!|@")
-    boolean reverse = false;
+    private boolean reverse = false;
 
     @Option(names = "--ignore-field-desc",
             description = "Ignore the field descriptions in mappings.")
-    boolean ignoreFieldDesc = false;
+    private boolean ignoreFieldDesc = false;
 
     // Force propagation option
-    Set<String> forcePropagation = Collections.emptySet();
+    private Set<String> forcePropagation = Collections.emptySet();
 
     /**
      * Set the forcePropagation variable and validate.
@@ -159,7 +159,7 @@ public class Main implements Callable<Integer> {
      */
     @Option(names = "--force-propagation",
             description = "A file with methods to force propagation to.")
-    public void setForcePropagation(File forcePropagationFile) {
+    private void setForcePropagation(File forcePropagationFile) {
         if (forcePropagationFile != null) {
             forcePropagation = new HashSet<>();
 
@@ -190,10 +190,10 @@ public class Main implements Callable<Integer> {
 
     @Option(names = "--propagate-private",
             description = "Propagate mappings to private methods.")
-    boolean propagatePrivate = false;
+    private boolean propagatePrivate = false;
 
     // Propagate bridges option
-    LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
+    private LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
 
     /**
      * Set the propagateBridges variable and validate.
@@ -203,7 +203,7 @@ public class Main implements Callable<Integer> {
     @Option(names = "propagate-bridges",
             description = "Propagate methods to bridge methods. "
                     + "Must be one of \"disabled\", \"enabled\", or \"compatible\".")
-    public void setPropagateBridges(String value) {
+    private void setPropagateBridges(String value) {
         switch (value.toLowerCase(Locale.ENGLISH)) {
             case "disabled":
                 propagateBridges = LinkedMethodPropagation.DISABLED;
@@ -222,35 +222,35 @@ public class Main implements Callable<Integer> {
 
     @Option(names = "--remove-frames",
             description = "Ignore the StackMap and StackMapTable frames.")
-    boolean removeFrames = false;
+    private boolean removeFrames = false;
 
     @Option(names = "--ignore-conflicts",
             description = "Ignore any mapping conflicts.")
-    boolean ignoreConflicts = false;
+    private boolean ignoreConflicts = false;
 
     @Option(names = "--check-package-access",
             description = "Check package access.")
-    boolean checkPackageAccess = false;
+    private boolean checkPackageAccess = false;
 
     @Option(names = "--fix-package-access",
             description = "Fix package access. Implies \"--fix-package-access\".")
-    boolean fixPackageAccess = false;
+    private boolean fixPackageAccess = false;
 
     @Option(names = "--resolve-missing", description = "Resolve missing methods.")
-    boolean resolveMissing = false;
+    private boolean resolveMissing = false;
 
     @Option(names = "--rebuild-source-filenames",
             description = "Rebuild the filenames of sources.")
-    boolean rebuildSourceFilenames = false;
+    private boolean rebuildSourceFilenames = false;
 
     @Option(names = "--skip-local-variable-mapping", description = "Skip remapping local variables")
-    boolean skipLocalVariableMapping = false;
+    private boolean skipLocalVariableMapping = false;
 
     @Option(names = "--rename-invalid-locals", description = "Rename invalid local variables.")
-    boolean renameInvalidLocals = false;
+    private boolean renameInvalidLocals = false;
 
     // Non-class file copy mode option
-    NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
+    private NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
 
     /**
      * Set the setNonClassCopyMode variable and validate.
@@ -281,7 +281,7 @@ public class Main implements Callable<Integer> {
     @Option(names = "--threads",
             description = "Number of threads to use while remapping. "
                     + "Defaults to the number of CPU cores available.")
-    int threads = -1;
+    private int threads = -1;
 
     /**
      * The main function of the CLI.
