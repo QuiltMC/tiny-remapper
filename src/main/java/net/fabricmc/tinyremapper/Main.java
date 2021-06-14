@@ -57,7 +57,7 @@ import picocli.CommandLine.Parameters;
     usageHelpAutoWidth = true)
 public class Main implements Callable<Integer> {
     /* @formatter:on */
-    public static String version = getClass().getPackage().getImplementationVersion();
+    public static String version = Main.class.getPackage().getImplementationVersion();
 
     /*
      * ================== PicoCLI stuff =====================
