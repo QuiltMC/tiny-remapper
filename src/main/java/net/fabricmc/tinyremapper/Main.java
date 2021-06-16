@@ -193,7 +193,7 @@ public class Main implements Callable<Integer> {
      *
      * @param value input from the user
      */
-    @Option(names = "propagate-bridges",
+    @Option(names = "--propagate-bridges",
             description = "Propagate methods to bridge methods. "
                     + "Must be one of \"disabled\", \"enabled\", or \"compatible\".")
     private void setPropagateBridges(String value) {
