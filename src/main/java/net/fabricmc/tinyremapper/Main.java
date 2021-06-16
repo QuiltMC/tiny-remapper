@@ -32,10 +32,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Callable;
-// import javax.validation.ConstraintViolation;
-// import javax.validation.Validation;
-// import javax.validation.Validator;
-// import javax.validation.constraints.Min;
 
 import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
@@ -330,22 +326,6 @@ public class Main implements Callable<Integer> {
         System.out.printf("Finished after %.2f ms.\n", (System.nanoTime() - startTime) / 1e6);
         return 0;
     }
-
-    // /**
-    // * Validate some of the command line options using JSR-380.
-    // */
-    // private void validate() {
-    // Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-    // Set<ConstraintViolation<User>> violations = validator.validate(this);
-
-    // if (!violations.isEmpty()) {
-    // String errorMsg = "";
-    // for (ConstraintViolation<User> violation : violations) {
-    // errorMsg += "ERROR: " + violation.getMessage() + "\n";
-    // }
-    // throw new ParameterException(spec.commandLine(), errorMsg);
-    // }
-    // }
 
     /**
      * Main runner function.
