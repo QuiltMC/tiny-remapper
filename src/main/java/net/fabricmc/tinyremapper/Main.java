@@ -56,8 +56,10 @@ import picocli.jansi.graalvm.AnsiConsole;
     "Picocli " + picocli.CommandLine.VERSION,
     "JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
     "OS: ${os.name} ${os.version} ${os.arch}"},
-    description = "A tool for remapping JAR files using \"Tiny\"-format mappings",
-    usageHelpAutoWidth = true)
+    description = "A tool for remapping JAR files using \"Tiny\"-format mappings.",
+    footer = {"%nCopyright (C) 2016, 2018 Player, asie; 2021 QuiltMC",
+        "Report bugs at <https://github.com/QuiltMC/tiny-remapper/issues>."},
+    usageHelpAutoWidth = true, abbreviateSynopsis = true)
 public class Main implements Callable<Integer> {
     /* @formatter:on */
 
