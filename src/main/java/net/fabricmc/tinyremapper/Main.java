@@ -37,6 +37,7 @@ import java.util.concurrent.Callable;
 // import javax.validation.Validator;
 // import javax.validation.constraints.Min;
 
+import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -50,7 +51,8 @@ import picocli.jansi.graalvm.AnsiConsole;
 
 /* @formatter:off - eclipse formatter doesn't seem to like annotations */
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true, version = {
-    "Tiny Remapper " + "0.4.1",
+    "@|bold,underline Tiny Remapper " + TinyRemapper.VERSION + "|@",
+    "ASM " + "9.1",
     "Picocli " + picocli.CommandLine.VERSION,
     "JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
     "OS: ${os.name} ${os.version} ${os.arch}"},
@@ -62,7 +64,8 @@ public class Main implements Callable<Integer> {
     /*
      * ================== PicoCLI stuff =====================
      */
-    @Spec CommandSpec spec; // injected by picocli
+    @Spec
+    private CommandSpec spec; // injected by picocli
 
     /*
      * ================== Input parameters ==================

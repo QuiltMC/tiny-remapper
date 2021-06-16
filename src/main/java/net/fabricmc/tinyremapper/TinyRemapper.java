@@ -68,6 +68,9 @@ import net.fabricmc.tinyremapper.IMappingProvider.Member;
 import net.fabricmc.tinyremapper.MemberInstance.MemberType;
 
 public class TinyRemapper {
+	// Version field
+	public static final String VERSION = "0.4.1";
+
 	public static class Builder {
 		private Builder() { }
 
