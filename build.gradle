@@ -80,7 +80,6 @@ jar {
 	manifest {
 		attributes	"Implementation-Title": "TinyRemapper",
 					"Implementation-Version": archiveVersion,
-					// TODO: Move to application plugin instead of placing this in the manifest directly
 					"Main-Class": "net.fabricmc.tinyremapper.Main",
 					"Automatic-Module-Name": "org.quiltmc.tinyremapper"
 	}
