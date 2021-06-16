@@ -135,11 +135,11 @@ public class Main implements Callable<Integer> {
     /*
      * ================== Options and switches ==============
      */
-    @Option(names = "--reverse",
+    @Option(names = {"-R", "--reverse"},
             description = "Reverse the mapping. @|bold,underline,yellow NOT YET IMPLEMENTED!|@")
     private boolean reverse = false;
 
-    @Option(names = "--ignore-field-desc",
+    @Option(names = {"-i", "--ignore-field-desc"},
             description = "Ignore the field descriptions in mappings.")
     private boolean ignoreFieldDesc = false;
 
@@ -151,7 +151,7 @@ public class Main implements Callable<Integer> {
      *
      * @param forcePropagationFile input file from the user
      */
-    @Option(names = "--force-propagation",
+    @Option(names = {"-f", "--force-propagation"},
             description = "A file with methods to force propagation to.")
     private void setForcePropagation(File forcePropagationFile) {
         if (forcePropagationFile != null) {
@@ -182,7 +182,7 @@ public class Main implements Callable<Integer> {
         }
     }
 
-    @Option(names = "--propagate-private",
+    @Option(names = {"-p", "--propagate-private"},
             description = "Propagate mappings to private methods.")
     private boolean propagatePrivate = false;
 
@@ -194,7 +194,7 @@ public class Main implements Callable<Integer> {
      *
      * @param value input from the user
      */
-    @Option(names = "--propagate-bridges",
+    @Option(names = {"-b", "--propagate-bridges"},
             description = "Propagate methods to bridge methods. "
                     + "Must be one of \"disabled\", \"enabled\", or \"compatible\".")
     private void setPropagateBridges(String value) {
@@ -218,29 +218,29 @@ public class Main implements Callable<Integer> {
             description = "Ignore the StackMap and StackMapTable frames.")
     private boolean removeFrames = false;
 
-    @Option(names = "--ignore-conflicts",
+    @Option(names = {"-I", "--ignore-conflicts"},
             description = "Ignore any mapping conflicts.")
     private boolean ignoreConflicts = false;
 
-    @Option(names = "--check-package-access",
+    @Option(names = {"-C", "--check-package-access"},
             description = "Check package access.")
     private boolean checkPackageAccess = false;
 
-    @Option(names = "--fix-package-access",
-            description = "Fix package access. Implies \"--fix-package-access\".")
+    @Option(names = {"-F", "--fix-package-access"},
+            description = "Fix package access. Implies \"--check-package-access\".")
     private boolean fixPackageAccess = false;
 
-    @Option(names = "--resolve-missing", description = "Resolve missing methods.")
+    @Option(names = {"-m", "--resolve-missing"}, description = "Resolve missing methods.")
     private boolean resolveMissing = false;
 
-    @Option(names = "--rebuild-source-filenames",
+    @Option(names = {"-r", "--rebuild-source-filenames"},
             description = "Rebuild the filenames of sources.")
     private boolean rebuildSourceFilenames = false;
 
-    @Option(names = "--skip-local-variable-mapping", description = "Skip remapping local variables")
+    @Option(names = {"-l", "--skip-local-variable-mapping"}, description = "Skip remapping local variables")
     private boolean skipLocalVariableMapping = false;
 
-    @Option(names = "--rename-invalid-locals", description = "Rename invalid local variables.")
+    @Option(names = {"-L", "--rename-invalid-locals"}, description = "Rename invalid local variables.")
     private boolean renameInvalidLocals = false;
 
     // Non-class file copy mode option
@@ -251,8 +251,8 @@ public class Main implements Callable<Integer> {
      *
      * @param value input from the user
      */
-    @Option(names = "--non-class-copy-mode",
-            description = "How to deal with non-class files in a JAR. "
+    @Option(names = {"-M", "--non-class-copy-mode"},
+            description = "How to deal with non-class files in a JAR (i.e. META-INF). "
                     + "Must be one of \"unchanged\", \"fixmeta\", or \"skipmeta\".")
     private void setNonClassCopyMode(String value) {
         switch (value.toLowerCase(Locale.ENGLISH)) {
@@ -275,7 +275,7 @@ public class Main implements Callable<Integer> {
     private int threads = -1;
 
     // @Min(value = 1, message = "Thread count must be greater than 0.")
-    @Option(names = "--threads",
+    @Option(names = {"-t", "--threads"},
             description = "Number of threads to use while remapping. "
                     + "Defaults to the number of CPU cores available.")
     private void setThreads(int input) {
