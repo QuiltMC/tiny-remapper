@@ -2,6 +2,7 @@ plugins {
 	id "java"
 	id "maven-publish"
 	id "com.diffplug.spotless" version "5.10.2"
+	id 'com.github.johnrengelman.shadow' version '7.0.0'  // Make a fat jar
 	// TODO: Apply checkstyle
 }
 
@@ -81,6 +82,11 @@ jar {
 					"Automatic-Module-Name": "org.quiltmc.tinyremapper"
 	}
 }
+
+shadowJar {
+	archiveClassifier.set("fat")
+}
+build.dependsOn shadowJar
 
 publishing {
 	publications {
