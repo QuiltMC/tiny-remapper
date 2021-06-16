@@ -46,7 +46,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
-
+import picocli.jansi.graalvm.AnsiConsole;
 
 /* @formatter:off - eclipse formatter doesn't seem to like annotations */
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true, version = {
@@ -348,7 +348,10 @@ public class Main implements Callable<Integer> {
      * @param args args from the user
      */
     public static void main(String... args) {
-        int exitCode = new CommandLine(new Main()).execute(args);
+        int exitCode;
+        try (AnsiConsole ansi = AnsiConsole.windowsInstall()) {
+            exitCode = new CommandLine(new Main()).execute(args);
+        }
         System.exit(exitCode);
     }
 }

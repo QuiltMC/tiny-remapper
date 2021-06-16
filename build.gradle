@@ -35,6 +35,9 @@ dependencies {
 
 	implementation "info.picocli:picocli:$picocliVersion"
 	annotationProcessor "info.picocli:picocli-codegen:$picocliVersion"
+
+	implementation group: "org.fusesource.jansi", name: "jansi", version: "2.3.3"
+	implementation "info.picocli:picocli-jansi-graalvm:1.2.0"
 }
 
 compileJava {
