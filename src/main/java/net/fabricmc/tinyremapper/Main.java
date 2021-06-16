@@ -47,9 +47,9 @@ import picocli.jansi.graalvm.AnsiConsole;
 
 /* @formatter:off - eclipse formatter doesn't seem to like annotations */
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true, version = {
-    "@|bold,underline Tiny Remapper " + TinyRemapper.VERSION + "|@",
-    "ASM " + "9.1",
-    "Picocli " + picocli.CommandLine.VERSION,
+    "@|bold,underline Tiny Remapper v" + TinyRemapper.VERSION + "|@",
+    "ASM v" + "9.1",
+    "Picocli v" + picocli.CommandLine.VERSION,
     "JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
     "OS: ${os.name} ${os.version} ${os.arch}"},
     description = "A tool for remapping JAR files using \"Tiny\"-format mappings.",
