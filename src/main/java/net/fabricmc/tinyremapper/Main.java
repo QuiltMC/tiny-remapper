@@ -137,11 +137,11 @@ public class Main implements Callable<Integer> {
      */
     @Option(names = {"-R", "--reverse"},
             description = "Reverse the mapping. @|bold,underline,yellow NOT YET IMPLEMENTED!|@")
-    private boolean reverse = false;
+    private boolean reverse;
 
     @Option(names = {"-i", "--ignore-field-desc"},
             description = "Ignore the field descriptions in mappings.")
-    private boolean ignoreFieldDesc = false;
+    private boolean ignoreFieldDesc;
 
     // Force propagation option
     private Set<String> forcePropagation = Collections.emptySet();
@@ -184,7 +184,7 @@ public class Main implements Callable<Integer> {
 
     @Option(names = {"-p", "--propagate-private"},
             description = "Propagate mappings to private methods.")
-    private boolean propagatePrivate = false;
+    private boolean propagatePrivate;
 
     // Propagate bridges option
     private LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
@@ -216,32 +216,34 @@ public class Main implements Callable<Integer> {
 
     @Option(names = "--remove-frames",
             description = "Ignore the StackMap and StackMapTable frames.")
-    private boolean removeFrames = false;
+    private boolean removeFrames;
 
     @Option(names = {"-I", "--ignore-conflicts"},
             description = "Ignore any mapping conflicts.")
-    private boolean ignoreConflicts = false;
+    private boolean ignoreConflicts;
 
     @Option(names = {"-C", "--check-package-access"},
             description = "Check package access.")
-    private boolean checkPackageAccess = false;
+    private boolean checkPackageAccess;
 
     @Option(names = {"-F", "--fix-package-access"},
             description = "Fix package access. Implies \"--check-package-access\".")
-    private boolean fixPackageAccess = false;
+    private boolean fixPackageAccess;
 
     @Option(names = {"-m", "--resolve-missing"}, description = "Resolve missing methods.")
-    private boolean resolveMissing = false;
+    private boolean resolveMissing;
 
     @Option(names = {"-r", "--rebuild-source-filenames"},
             description = "Rebuild the filenames of sources.")
-    private boolean rebuildSourceFilenames = false;
+    private boolean rebuildSourceFilenames;
 
-    @Option(names = {"-l", "--skip-local-variable-mapping"}, description = "Skip remapping local variables")
-    private boolean skipLocalVariableMapping = false;
+    @Option(names = {"-l", "--skip-local-variable-mapping"},
+            description = "Skip remapping local variables")
+    private boolean skipLocalVariableMapping;
 
-    @Option(names = {"-L", "--rename-invalid-locals"}, description = "Rename invalid local variables.")
-    private boolean renameInvalidLocals = false;
+    @Option(names = {"-L", "--rename-invalid-locals"},
+            description = "Rename invalid local variables.")
+    private boolean renameInvalidLocals;
 
     // Non-class file copy mode option
     private NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
