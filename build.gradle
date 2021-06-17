@@ -127,7 +127,7 @@ task generateManpageAsciiDoc(type: JavaExec) {
     group = "Documentation"
     description = "Generate AsciiDoc manpage"
     classpath(configurations.runtimeClasspath, configurations.annotationProcessor, sourceSets.main.runtimeClasspath)
-    main 'picocli.codegen.docgen.manpage.ManPageGenerator'
+    mainClass = 'picocli.codegen.docgen.manpage.ManPageGenerator'
     args "net.fabricmc.tinyremapper.Main", "--outdir=${project.buildDir}/generated-picocli-docs", "-v" //, "--template-dir=src/docs/mantemplates"
 }
 
