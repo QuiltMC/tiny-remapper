@@ -58,7 +58,7 @@ import picocli.jansi.graalvm.AnsiConsole;
     footer = {"%nCopyright (C) 2016, 2018 Player, asie; 2021 QuiltMC",
         "Report bugs at <https://github.com/QuiltMC/tiny-remapper/issues>."},
     usageHelpAutoWidth = true, abbreviateSynopsis = true)
-public class Main implements Callable<Integer> {
+public final class Main implements Callable<Integer> {
     /* @formatter:on */
 
     // Version info - done by blossom
@@ -204,7 +204,7 @@ public class Main implements Callable<Integer> {
             description = "Propagate methods to bridge methods. "
                     + "Must be one of \"disabled\", \"enabled\", or \"compatible\".")
     private void setPropagateBridges(String value) {
-        switch (value.toLowerCase(Locale.ENGLISH)) {
+        switch (value.toLowerCase(Locale.ROOT)) {
             case "disabled":
                 propagateBridges = LinkedMethodPropagation.DISABLED;
                 break;
@@ -263,7 +263,7 @@ public class Main implements Callable<Integer> {
             description = "How to deal with non-class files in a JAR (i.e. META-INF). "
                     + "Must be one of \"unchanged\", \"fixmeta\", or \"skipmeta\".")
     private void setNonClassCopyMode(String value) {
-        switch (value.toLowerCase(Locale.ENGLISH)) {
+        switch (value.toLowerCase(Locale.ROOT)) {
             case "unchanged":
                 ncCopyMode = NonClassCopyMode.UNCHANGED;
                 break;
