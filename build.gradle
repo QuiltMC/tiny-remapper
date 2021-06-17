@@ -3,7 +3,8 @@ plugins {
 	id "maven-publish"
 	id "com.diffplug.spotless" version "5.10.2"
 	id 'com.github.johnrengelman.shadow' version '7.0.0'  // Make a fat jar
-	id 'org.asciidoctor.jvm.convert' version '3.1.0'  // Make man pages
+	id 'org.asciidoctor.jvm.convert' version '3.1.0'      // Make man pages
+	id 'net.kyori.blossom' version '1.2.0'                // Better version (again)
 	// TODO: Apply checkstyle
 }
 
@@ -23,17 +24,16 @@ repositories {
 }
 
 dependencies {
-	def asmVersion = "9.1"
-
+	// ASM
 	implementation "org.ow2.asm:asm:$asmVersion"
 	implementation "org.ow2.asm:asm-commons:$asmVersion"
 	implementation "org.ow2.asm:asm-tree:$asmVersion"
 	implementation "org.ow2.asm:asm-util:$asmVersion"
+
+	// Testing
 	testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
 
 	// CLI tool
-	def picocliVersion = "4.6.1"
-
 	implementation "info.picocli:picocli:$picocliVersion"
 	annotationProcessor "info.picocli:picocli-codegen:$picocliVersion"
 
@@ -66,6 +66,11 @@ spotless {
 		// Use comma separator for openjdk like license headers
 		licenseHeaderFile(file("HEADER")).yearSeparator(", ")
 	}
+}
+
+blossom {
+	replaceToken("__TINY_VERSION", project.version)
+	replaceToken("__ASM_VERSION", asmVersion)
 }
 
 test {

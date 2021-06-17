@@ -33,7 +33,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import net.fabricmc.tinyremapper.TinyRemapper;
 import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -47,8 +46,8 @@ import picocli.jansi.graalvm.AnsiConsole;
 
 /* @formatter:off - eclipse formatter doesn't seem to like annotations */
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true, version = {
-    "@|bold,underline Tiny Remapper v" + TinyRemapper.VERSION + "|@",
-    "ASM v" + "9.1",
+    "@|bold,underline Tiny Remapper v" + Main.VERSION + "|@",
+    "ASM v" + Main.ASM_VERSION,
     "Picocli v" + picocli.CommandLine.VERSION,
     "JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
     "OS: ${os.name} ${os.version} ${os.arch}"},
@@ -58,6 +57,10 @@ import picocli.jansi.graalvm.AnsiConsole;
     usageHelpAutoWidth = true, abbreviateSynopsis = true)
 public class Main implements Callable<Integer> {
     /* @formatter:on */
+
+    // Version info - done by blossom
+    public static final String VERSION = "__TINY_VERSION";
+    public static final String ASM_VERSION = "__ASM_VERSION";
 
     /*
      * ================== PicoCLI stuff =====================
