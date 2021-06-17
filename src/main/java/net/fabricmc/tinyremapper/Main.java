@@ -49,311 +49,311 @@ import picocli.jansi.graalvm.AnsiConsole;
  * The main class for the Tiny-Remapper CLI.
  */
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true, version = {
-    "@|bold,underline Tiny Remapper v" + Main.VERSION + "|@",
-    "ASM v" + Main.ASM_VERSION,
-    "Picocli v" + picocli.CommandLine.VERSION,
-    "JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
-    "OS: ${os.name} ${os.version} ${os.arch}"},
-    description = "A tool for remapping JAR files using \"Tiny\"-format mappings.",
-    footer = {"%nCopyright (C) 2016, 2018 Player, asie; 2021 QuiltMC",
-        "Report bugs at <https://github.com/QuiltMC/tiny-remapper/issues>."},
-    usageHelpAutoWidth = true, abbreviateSynopsis = true)
+	"@|bold,underline Tiny Remapper v" + Main.VERSION + "|@",
+	"ASM v" + Main.ASM_VERSION,
+	"Picocli v" + picocli.CommandLine.VERSION,
+	"JVM: ${java.version} (${java.vendor} ${java.vm.name} ${java.vm.version})",
+	"OS: ${os.name} ${os.version} ${os.arch}"},
+	description = "A tool for remapping JAR files using \"Tiny\"-format mappings.",
+	footer = {"%nCopyright (C) 2016, 2018 Player, asie; 2021 QuiltMC",
+		"Report bugs at <https://github.com/QuiltMC/tiny-remapper/issues>."},
+	usageHelpAutoWidth = true, abbreviateSynopsis = true)
 public final class Main implements Callable<Integer> {
-    /* @formatter:on */
+	/* @formatter:on */
 
-    // Version info - done by blossom
-    public static final String VERSION = "__TINY_VERSION";
-    public static final String ASM_VERSION = "__ASM_VERSION";
+	// Version info - done by blossom
+	public static final String VERSION = "__TINY_VERSION";
+	public static final String ASM_VERSION = "__ASM_VERSION";
 
-    /*
-     * ================== PicoCLI stuff =====================
-     */
-    @Spec
-    private CommandSpec spec; // injected by picocli
+	/*
+	 * ================== PicoCLI stuff =====================
+	 */
+	@Spec
+	private CommandSpec spec; // injected by picocli
 
-    /*
-     * ================== Input parameters ==================
-     */
+	/*
+	 * ================== Input parameters ==================
+	 */
 
-    // Input file
-    private Path inputFile;
+	// Input file
+	private Path inputFile;
 
-    /**
-     * Set the input file path variable and validate.
-     *
-     * @param value input path from the user
-     */
-    @Parameters(index = "0", description = "Path to input file to remap.")
-    private void setInputFile(Path value) {
-        if (!Files.isReadable(value)) {
-            throw new ParameterException(spec.commandLine(),
-                    "Cannot read input file " + value + ".");
-        }
-        inputFile = value;
-    }
+	/**
+	 * Set the input file path variable and validate.
+	 *
+	 * @param value input path from the user
+	 */
+	@Parameters(index = "0", description = "Path to input file to remap.")
+	private void setInputFile(Path value) {
+		if (!Files.isReadable(value)) {
+			throw new ParameterException(spec.commandLine(),
+					"Cannot read input file " + value + ".");
+		}
+		inputFile = value;
+	}
 
-    @Parameters(index = "1", description = "Path to output remapped file.")
-    private Path outputFile;
+	@Parameters(index = "1", description = "Path to output remapped file.")
+	private Path outputFile;
 
-    // Mappings file
-    private Path mappings;
+	// Mappings file
+	private Path mappings;
 
-    /**
-     * Set the mappings path variable and validate.
-     *
-     * @param value input path from the user
-     */
-    @Parameters(index = "2", description = "Path to mappings file.")
-    private void setMappings(Path value) {
-        if (!Files.isReadable(value)) {
-            throw new ParameterException(spec.commandLine(),
-                    "Cannot read mappings file " + value + ".");
-        }
-        mappings = value;
-    }
+	/**
+	 * Set the mappings path variable and validate.
+	 *
+	 * @param value input path from the user
+	 */
+	@Parameters(index = "2", description = "Path to mappings file.")
+	private void setMappings(Path value) {
+		if (!Files.isReadable(value)) {
+			throw new ParameterException(spec.commandLine(),
+					"Cannot read mappings file " + value + ".");
+		}
+		mappings = value;
+	}
 
-    @Parameters(index = "3", description = "Namespace to map from.")
-    private String fromMapping;
+	@Parameters(index = "3", description = "Namespace to map from.")
+	private String fromMapping;
 
-    @Parameters(index = "4", description = "Namespace to map to.")
-    private String toMapping;
+	@Parameters(index = "4", description = "Namespace to map to.")
+	private String toMapping;
 
-    // Classpath
-    private Path[] classpath;
+	// Classpath
+	private Path[] classpath;
 
-    /**
-     * Set the classpath variable and validate.
-     *
-     * @param value input paths from the user
-     */
-    @Parameters(index = "5..*", description = "Additional files to add to the classpath.")
-    private void setClasspath(Path[] value) {
-        classpath = new Path[value.length];
-        for (int i = 0; i < value.length; i++) {
-            classpath[i] = value[i];
-            if (!Files.isReadable(value[i])) {
-                throw new ParameterException(spec.commandLine(),
-                        "Cannot read classpath file " + value[i] + ".");
-            }
-        }
-    }
+	/**
+	 * Set the classpath variable and validate.
+	 *
+	 * @param value input paths from the user
+	 */
+	@Parameters(index = "5..*", description = "Additional files to add to the classpath.")
+	private void setClasspath(Path[] value) {
+		classpath = new Path[value.length];
+		for (int i = 0; i < value.length; i++) {
+			classpath[i] = value[i];
+			if (!Files.isReadable(value[i])) {
+				throw new ParameterException(spec.commandLine(),
+						"Cannot read classpath file " + value[i] + ".");
+			}
+		}
+	}
 
-    /*
-     * ================== Options and switches ==============
-     */
-    @Option(names = {"-R", "--reverse"},
-            description = "Reverse the mapping. @|bold,underline,yellow NOT YET IMPLEMENTED!|@")
-    private boolean reverse;
+	/*
+	 * ================== Options and switches ==============
+	 */
+	@Option(names = {"-R", "--reverse"},
+			description = "Reverse the mapping. @|bold,underline,yellow NOT YET IMPLEMENTED!|@")
+	private boolean reverse;
 
-    @Option(names = {"-i", "--ignore-field-desc"},
-            description = "Ignore the field descriptions in mappings.")
-    private boolean ignoreFieldDesc;
+	@Option(names = {"-i", "--ignore-field-desc"},
+			description = "Ignore the field descriptions in mappings.")
+	private boolean ignoreFieldDesc;
 
-    // Force propagation option
-    private Set<String> forcePropagation = Collections.emptySet();
+	// Force propagation option
+	private Set<String> forcePropagation = Collections.emptySet();
 
-    /**
-     * Set the forcePropagation variable and validate.
-     *
-     * @param forcePropagationFile input file from the user
-     */
-    @Option(names = {"-f", "--force-propagation"},
-            description = "A file with methods to force propagation to.")
-    private void setForcePropagation(File forcePropagationFile) {
-        if (forcePropagationFile != null) {
-            forcePropagation = new HashSet<>();
+	/**
+	 * Set the forcePropagation variable and validate.
+	 *
+	 * @param forcePropagationFile input file from the user
+	 */
+	@Option(names = {"-f", "--force-propagation"},
+			description = "A file with methods to force propagation to.")
+	private void setForcePropagation(File forcePropagationFile) {
+		if (forcePropagationFile != null) {
+			forcePropagation = new HashSet<>();
 
-            if (!forcePropagationFile.canRead()) {
-                throw new ParameterException(spec.commandLine(),
-                        "Cannot read forcePropagation file " + forcePropagationFile + ".");
-            }
+			if (!forcePropagationFile.canRead()) {
+				throw new ParameterException(spec.commandLine(),
+						"Cannot read forcePropagation file " + forcePropagationFile + ".");
+			}
 
-            try (BufferedReader reader = new BufferedReader(new FileReader(forcePropagationFile))) {
-                String line;
+			try (BufferedReader reader = new BufferedReader(new FileReader(forcePropagationFile))) {
+				String line;
 
-                while ((line = reader.readLine()) != null) {
-                    line = line.trim();
+				while ((line = reader.readLine()) != null) {
+					line = line.trim();
 
-                    if (line.isEmpty() || line.charAt(0) == '#') {
-                        continue;
-                    }
+					if (line.isEmpty() || line.charAt(0) == '#') {
+						continue;
+					}
 
-                    forcePropagation.add(line);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new ParameterException(spec.commandLine(),
-                        "An error occurred while parsing the forcePropagation file.");
-            }
-        }
-    }
+					forcePropagation.add(line);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new ParameterException(spec.commandLine(),
+						"An error occurred while parsing the forcePropagation file.");
+			}
+		}
+	}
 
-    @Option(names = {"-p", "--propagate-private"},
-            description = "Propagate mappings to private methods.")
-    private boolean propagatePrivate;
+	@Option(names = {"-p", "--propagate-private"},
+			description = "Propagate mappings to private methods.")
+	private boolean propagatePrivate;
 
-    // Propagate bridges option
-    private LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
+	// Propagate bridges option
+	private LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
 
-    /**
-     * Set the propagateBridges variable and validate.
-     *
-     * @param value input from the user
-     */
-    @Option(names = {"-b", "--propagate-bridges"},
-            description = "Propagate methods to bridge methods. "
-                    + "Must be one of \"disabled\", \"enabled\", or \"compatible\".")
-    private void setPropagateBridges(String value) {
-        switch (value.toLowerCase(Locale.ROOT)) {
-            case "disabled":
-                propagateBridges = LinkedMethodPropagation.DISABLED;
-                break;
-            case "enabled":
-                propagateBridges = LinkedMethodPropagation.ENABLED;
-                break;
-            case "compatible":
-                propagateBridges = LinkedMethodPropagation.COMPATIBLE;
-                break;
-            default:
-                throw new ParameterException(spec.commandLine(),
-                        "Invalid propagateBridges value: " + value);
-        }
-    }
+	/**
+	 * Set the propagateBridges variable and validate.
+	 *
+	 * @param value input from the user
+	 */
+	@Option(names = {"-b", "--propagate-bridges"},
+			description = "Propagate methods to bridge methods. "
+					+ "Must be one of \"disabled\", \"enabled\", or \"compatible\".")
+	private void setPropagateBridges(String value) {
+		switch (value.toLowerCase(Locale.ROOT)) {
+			case "disabled":
+				propagateBridges = LinkedMethodPropagation.DISABLED;
+				break;
+			case "enabled":
+				propagateBridges = LinkedMethodPropagation.ENABLED;
+				break;
+			case "compatible":
+				propagateBridges = LinkedMethodPropagation.COMPATIBLE;
+				break;
+			default:
+				throw new ParameterException(spec.commandLine(),
+						"Invalid propagateBridges value: " + value);
+		}
+	}
 
-    @Option(names = "--remove-frames",
-            description = "Ignore the StackMap and StackMapTable frames.")
-    private boolean removeFrames;
+	@Option(names = "--remove-frames",
+			description = "Ignore the StackMap and StackMapTable frames.")
+	private boolean removeFrames;
 
-    @Option(names = {"-I", "--ignore-conflicts"},
-            description = "Ignore any mapping conflicts.")
-    private boolean ignoreConflicts;
+	@Option(names = {"-I", "--ignore-conflicts"},
+			description = "Ignore any mapping conflicts.")
+	private boolean ignoreConflicts;
 
-    @Option(names = {"-C", "--check-package-access"},
-            description = "Check package access.")
-    private boolean checkPackageAccess;
+	@Option(names = {"-C", "--check-package-access"},
+			description = "Check package access.")
+	private boolean checkPackageAccess;
 
-    @Option(names = {"-F", "--fix-package-access"},
-            description = "Fix package access. Implies \"--check-package-access\".")
-    private boolean fixPackageAccess;
+	@Option(names = {"-F", "--fix-package-access"},
+			description = "Fix package access. Implies \"--check-package-access\".")
+	private boolean fixPackageAccess;
 
-    @Option(names = {"-m", "--resolve-missing"}, description = "Resolve missing methods.")
-    private boolean resolveMissing;
+	@Option(names = {"-m", "--resolve-missing"}, description = "Resolve missing methods.")
+	private boolean resolveMissing;
 
-    @Option(names = {"-r", "--rebuild-source-filenames"},
-            description = "Rebuild the filenames of sources.")
-    private boolean rebuildSourceFilenames;
+	@Option(names = {"-r", "--rebuild-source-filenames"},
+			description = "Rebuild the filenames of sources.")
+	private boolean rebuildSourceFilenames;
 
-    @Option(names = {"-l", "--skip-local-variable-mapping"},
-            description = "Skip remapping local variables")
-    private boolean skipLocalVariableMapping;
+	@Option(names = {"-l", "--skip-local-variable-mapping"},
+			description = "Skip remapping local variables")
+	private boolean skipLocalVariableMapping;
 
-    @Option(names = {"-L", "--rename-invalid-locals"},
-            description = "Rename invalid local variables.")
-    private boolean renameInvalidLocals;
+	@Option(names = {"-L", "--rename-invalid-locals"},
+			description = "Rename invalid local variables.")
+	private boolean renameInvalidLocals;
 
-    // Non-class file copy mode option
-    private NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
+	// Non-class file copy mode option
+	private NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
 
-    /**
-     * Set the setNonClassCopyMode variable and validate.
-     *
-     * @param value input from the user
-     */
-    @Option(names = {"-M", "--non-class-copy-mode"},
-            description = "How to deal with non-class files in a JAR (i.e. META-INF). "
-                    + "Must be one of \"unchanged\", \"fixmeta\", or \"skipmeta\".")
-    private void setNonClassCopyMode(String value) {
-        switch (value.toLowerCase(Locale.ROOT)) {
-            case "unchanged":
-                ncCopyMode = NonClassCopyMode.UNCHANGED;
-                break;
-            case "fixmeta":
-                ncCopyMode = NonClassCopyMode.FIX_META_INF;
-                break;
-            case "skipmeta":
-                ncCopyMode = NonClassCopyMode.SKIP_META_INF;
-                break;
-            default:
-                throw new ParameterException(spec.commandLine(),
-                        "Invalid nonClassCopyMode value: " + value);
-        }
-    }
+	/**
+	 * Set the setNonClassCopyMode variable and validate.
+	 *
+	 * @param value input from the user
+	 */
+	@Option(names = {"-M", "--non-class-copy-mode"},
+			description = "How to deal with non-class files in a JAR (i.e. META-INF). "
+					+ "Must be one of \"unchanged\", \"fixmeta\", or \"skipmeta\".")
+	private void setNonClassCopyMode(String value) {
+		switch (value.toLowerCase(Locale.ROOT)) {
+			case "unchanged":
+				ncCopyMode = NonClassCopyMode.UNCHANGED;
+				break;
+			case "fixmeta":
+				ncCopyMode = NonClassCopyMode.FIX_META_INF;
+				break;
+			case "skipmeta":
+				ncCopyMode = NonClassCopyMode.SKIP_META_INF;
+				break;
+			default:
+				throw new ParameterException(spec.commandLine(),
+						"Invalid nonClassCopyMode value: " + value);
+		}
+	}
 
-    // Threads option
-    private int threads = -1;
+	// Threads option
+	private int threads = -1;
 
-    /**
-     * Set the threads variable and validate.
-     *
-     * @param value
-     */
-    @Option(names = {"-t", "--threads"},
-            description = "Number of threads to use while remapping. "
-                    + "Defaults to the number of CPU cores available.")
-    private void setThreads(int value) {
-        if (value <= 0) {
-            throw new ParameterException(spec.commandLine(), "Threads must be greater than 0.");
-        }
-        threads = value;
-    }
+	/**
+	 * Set the threads variable and validate.
+	 *
+	 * @param value
+	 */
+	@Option(names = {"-t", "--threads"},
+			description = "Number of threads to use while remapping. "
+					+ "Defaults to the number of CPU cores available.")
+	private void setThreads(int value) {
+		if (value <= 0) {
+			throw new ParameterException(spec.commandLine(), "Threads must be greater than 0.");
+		}
+		threads = value;
+	}
 
-    /**
-     * The main function of the CLI.
-     *
-     * @return exit code
-     */
-    public Integer call() throws Exception {
-        if (classpath == null) {
-            classpath = new Path[0]; // PicoCLI makes a null array, Tiny wants an empty one
-        }
+	/**
+	 * The main function of the CLI.
+	 *
+	 * @return exit code
+	 */
+	public Integer call() throws Exception {
+		if (classpath == null) {
+			classpath = new Path[0]; // PicoCLI makes a null array, Tiny wants an empty one
+		}
 
-        long startTime = System.nanoTime();
+		long startTime = System.nanoTime();
 
-        TinyRemapper remapper = TinyRemapper.newRemapper()
-                .withMappings(TinyUtils.createTinyMappingProvider(mappings, fromMapping, toMapping))
-                .ignoreFieldDesc(ignoreFieldDesc)
-                .withForcedPropagation(forcePropagation)
-                .propagatePrivate(propagatePrivate)
-                .propagateBridges(propagateBridges)
-                .removeFrames(removeFrames)
-                .ignoreConflicts(ignoreConflicts)
-                .checkPackageAccess(checkPackageAccess)
-                .fixPackageAccess(fixPackageAccess)
-                .resolveMissing(resolveMissing)
-                .rebuildSourceFilenames(rebuildSourceFilenames)
-                .skipLocalVariableMapping(skipLocalVariableMapping)
-                .renameInvalidLocals(renameInvalidLocals)
-                .threads(threads)
-                .build();
+		TinyRemapper remapper = TinyRemapper.newRemapper()
+				.withMappings(TinyUtils.createTinyMappingProvider(mappings, fromMapping, toMapping))
+				.ignoreFieldDesc(ignoreFieldDesc)
+				.withForcedPropagation(forcePropagation)
+				.propagatePrivate(propagatePrivate)
+				.propagateBridges(propagateBridges)
+				.removeFrames(removeFrames)
+				.ignoreConflicts(ignoreConflicts)
+				.checkPackageAccess(checkPackageAccess)
+				.fixPackageAccess(fixPackageAccess)
+				.resolveMissing(resolveMissing)
+				.rebuildSourceFilenames(rebuildSourceFilenames)
+				.skipLocalVariableMapping(skipLocalVariableMapping)
+				.renameInvalidLocals(renameInvalidLocals)
+				.threads(threads)
+				.build();
 
-        try (OutputConsumerPath outputConsumer =
-                new OutputConsumerPath.Builder(outputFile).build()) {
-            outputConsumer.addNonClassFiles(inputFile, ncCopyMode, remapper);
+		try (OutputConsumerPath outputConsumer =
+				new OutputConsumerPath.Builder(outputFile).build()) {
+			outputConsumer.addNonClassFiles(inputFile, ncCopyMode, remapper);
 
-            remapper.readInputs(inputFile);
-            remapper.readClassPath(classpath);
+			remapper.readInputs(inputFile);
+			remapper.readClassPath(classpath);
 
-            remapper.apply(outputConsumer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            remapper.finish();
-        }
+			remapper.apply(outputConsumer);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			remapper.finish();
+		}
 
-        System.out.printf("Finished after %.2f ms.\n", (System.nanoTime() - startTime) / 1e6);
-        return 0;
-    }
+		System.out.printf("Finished after %.2f ms.\n", (System.nanoTime() - startTime) / 1e6);
+		return 0;
+	}
 
-    /**
-     * Main runner function.
-     *
-     * @param args args from the user
-     */
-    public static void main(String... args) {
-        int exitCode;
-        try (AnsiConsole ansi = AnsiConsole.windowsInstall()) {
-            exitCode = new CommandLine(new Main()).execute(args);
-        }
-        System.exit(exitCode);
-    }
+	/**
+	 * Main runner function.
+	 *
+	 * @param args args from the user
+	 */
+	public static void main(String... args) {
+		int exitCode;
+		try (AnsiConsole ansi = AnsiConsole.windowsInstall()) {
+			exitCode = new CommandLine(new Main()).execute(args);
+		}
+		System.exit(exitCode);
+	}
 }
