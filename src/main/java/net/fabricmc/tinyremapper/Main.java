@@ -73,24 +73,24 @@ public class Main implements Callable<Integer> {
      */
 
     // Input file
-    private Path input;
+    private Path inputFile;
 
     /**
-     * Set the input path variable and validate.
+     * Set the input file path variable and validate.
      *
      * @param value input path from the user
      */
     @Parameters(index = "0", description = "Path to input file to remap.")
-    private void setInput(Path value) {
-        if (!Files.isReadable(input)) {
+    private void setInputFile(Path value) {
+        if (!Files.isReadable(value)) {
             throw new ParameterException(spec.commandLine(),
                     "Cannot read input file " + value + ".");
         }
-        input = value;
+        inputFile = value;
     }
 
     @Parameters(index = "1", description = "Path to output remapped file.")
-    private Path output;
+    private Path outputFile;
 
     // Mappings file
     private Path mappings;
@@ -102,7 +102,7 @@ public class Main implements Callable<Integer> {
      */
     @Parameters(index = "2", description = "Path to mappings file.")
     private void setMappings(Path value) {
-        if (!Files.isReadable(input)) {
+        if (!Files.isReadable(value)) {
             throw new ParameterException(spec.commandLine(),
                     "Cannot read mappings file " + value + ".");
         }
@@ -283,11 +283,11 @@ public class Main implements Callable<Integer> {
     @Option(names = {"-t", "--threads"},
             description = "Number of threads to use while remapping. "
                     + "Defaults to the number of CPU cores available.")
-    private void setThreads(int input) {
-        if (input <= 0) {
+    private void setThreads(int value) {
+        if (value <= 0) {
             throw new ParameterException(spec.commandLine(), "Threads must be greater than 0.");
         }
-        threads = input;
+        threads = value;
     }
 
     /**
@@ -296,6 +296,8 @@ public class Main implements Callable<Integer> {
      * @return exit code
      */
     public Integer call() throws Exception {
+        System.out.println(inputFile);
+
         long startTime = System.nanoTime();
 
         TinyRemapper remapper = TinyRemapper.newRemapper()
@@ -315,10 +317,11 @@ public class Main implements Callable<Integer> {
                 .threads(threads)
                 .build();
 
-        try (OutputConsumerPath outputConsumer = new OutputConsumerPath.Builder(output).build()) {
-            outputConsumer.addNonClassFiles(input, ncCopyMode, remapper);
+        try (OutputConsumerPath outputConsumer =
+                new OutputConsumerPath.Builder(outputFile).build()) {
+            outputConsumer.addNonClassFiles(inputFile, ncCopyMode, remapper);
 
-            remapper.readInputs(input);
+            remapper.readInputs(inputFile);
             remapper.readClassPath(classpath);
 
             remapper.apply(outputConsumer);
