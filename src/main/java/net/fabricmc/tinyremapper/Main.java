@@ -296,7 +296,9 @@ public class Main implements Callable<Integer> {
      * @return exit code
      */
     public Integer call() throws Exception {
-        System.out.println(inputFile);
+        if (classpath == null) {
+            classpath = new Path[0];  // PicoCLI makes a null array, Tiny wants an empty one
+        }
 
         long startTime = System.nanoTime();
 
