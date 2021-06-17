@@ -94,7 +94,12 @@ jar {
 shadowJar {
 	archiveClassifier.set("fat")
 }
-build.dependsOn shadowJar
+
+build {
+	dependsOn {
+		shadowJar
+	}
+}
 
 publishing {
 	publications {
