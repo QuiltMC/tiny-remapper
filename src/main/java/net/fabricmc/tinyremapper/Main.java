@@ -45,6 +45,9 @@ import picocli.CommandLine.Spec;
 import picocli.jansi.graalvm.AnsiConsole;
 
 /* @formatter:off - eclipse formatter doesn't seem to like annotations */
+/**
+ * The main class for the Tiny-Remapper CLI.
+ */
 @Command(name = "tiny-remapper", mixinStandardHelpOptions = true, version = {
     "@|bold,underline Tiny Remapper v" + Main.VERSION + "|@",
     "ASM v" + Main.ASM_VERSION,
@@ -279,7 +282,11 @@ public class Main implements Callable<Integer> {
     // Threads option
     private int threads = -1;
 
-    // @Min(value = 1, message = "Thread count must be greater than 0.")
+    /**
+     * Set the threads variable and validate.
+     *
+     * @param value
+     */
     @Option(names = {"-t", "--threads"},
             description = "Number of threads to use while remapping. "
                     + "Defaults to the number of CPU cores available.")
@@ -297,7 +304,7 @@ public class Main implements Callable<Integer> {
      */
     public Integer call() throws Exception {
         if (classpath == null) {
-            classpath = new Path[0];  // PicoCLI makes a null array, Tiny wants an empty one
+            classpath = new Path[0]; // PicoCLI makes a null array, Tiny wants an empty one
         }
 
         long startTime = System.nanoTime();
