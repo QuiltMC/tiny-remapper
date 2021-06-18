@@ -202,7 +202,7 @@ public final class Main implements Callable<Integer> {
 	 */
 	@Option(names = {"-b", "--propagate-bridges"},
 			description = "Propagate methods to bridge methods. "
-					+ "Must be one of \"disabled\", \"enabled\", or \"compatible\".")
+					+ "Must be one of the following: \"disabled\", \"enabled\", or \"compatible\".")
 	private void setPropagateBridges(String value) {
 		switch (value.toLowerCase(Locale.ROOT)) {
 			case "disabled":
@@ -261,7 +261,7 @@ public final class Main implements Callable<Integer> {
 	 */
 	@Option(names = {"-M", "--non-class-copy-mode"},
 			description = "How to deal with non-class files in a JAR (i.e. META-INF). "
-					+ "Must be one of \"unchanged\", \"fixmeta\", or \"skipmeta\".")
+					+ "Must be one of the following: \"unchanged\", \"fixmeta\", or \"skipmeta\".")
 	private void setNonClassCopyMode(String value) {
 		switch (value.toLowerCase(Locale.ROOT)) {
 			case "unchanged":
