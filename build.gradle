@@ -124,7 +124,7 @@ publishing {
 
 // Manpage generator (included with PicoCLI)
 task generateManpageAsciiDoc(type: JavaExec) {
-	dependsOn(classes)
+	dependsOn classes
 	group = "Documentation"
 	description = "Generate AsciiDoc manpage"
 	classpath(configurations.runtimeClasspath, configurations.annotationProcessor, sourceSets.main.runtimeClasspath)
@@ -133,11 +133,18 @@ task generateManpageAsciiDoc(type: JavaExec) {
 }
 
 asciidoctor {
-	dependsOn(generateManpageAsciiDoc)
+	dependsOn generateManpageAsciiDoc
 	sourceDir = file("${project.buildDir}/generated-picocli-docs")
 	outputDir = file("${project.buildDir}/docs")
 	logDocuments = true
 	outputOptions {
 		backends = ["manpage", "html5"]
 	}
+}
+
+task githubCMDDocs(type: Copy) {
+	dependsOn asciidoctor
+	from "./build/docs/html5/tiny-remapper.html"
+	into "./docs/cli/"
+	rename "tiny-remapper.html", "index.html"
 }
