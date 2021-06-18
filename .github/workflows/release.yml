@@ -15,3 +15,30 @@ jobs:
           MAVEN_URL: ${{ secrets.MAVEN_URL }}
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
+
+  docs:
+    name: Generate Docs
+    runs-on: ubuntu-latest
+    container:
+      image: openjdk:16-jdk
+      options: --user root
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+
+      - name: Build docs
+        run: |
+          chmod +x ./gradlew
+          ./gradlew githubCMDDocs --stacktrace
+
+      - name: Create commit
+        uses: EndBug/add-and-commit@v7
+        with:
+          add: "."
+          default-author: github_actions
+          message: Update docs
+          push: true
+          signoff: true

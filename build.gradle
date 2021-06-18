@@ -2,32 +2,48 @@ plugins {
 	id "java"
 	id "maven-publish"
 	id "com.diffplug.spotless" version "5.10.2"
+	id "com.github.johnrengelman.shadow" version "7.0.0"  // Make a fat jar
+	id "org.asciidoctor.jvm.convert" version "3.1.0"      // Make man pages
+	id "net.kyori.blossom" version "1.2.0"                // Better version (again)
 	// TODO: Apply checkstyle
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-version = '0.4.1'
+version = "0.4.1"
 
 def ENV = System.getenv()
 version = version + (ENV.GITHUB_ACTIONS ? "" : "+local")
 
 group = "org.quiltmc"
-archivesBaseName = 'tiny-remapper'
+archivesBaseName = "tiny-remapper"
 
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	def asmVersion = "9.1"
-
+	// ASM
 	implementation "org.ow2.asm:asm:$asmVersion"
 	implementation "org.ow2.asm:asm-commons:$asmVersion"
 	implementation "org.ow2.asm:asm-tree:$asmVersion"
 	implementation "org.ow2.asm:asm-util:$asmVersion"
-	testImplementation 'org.junit.jupiter:junit-jupiter:5.6.2'
+
+	// Testing
+	testImplementation "org.junit.jupiter:junit-jupiter:5.6.2"
+
+	// CLI tool
+	implementation "info.picocli:picocli:$picocliVersion"
+	annotationProcessor "info.picocli:picocli-codegen:$picocliVersion"
+
+	implementation group: "org.fusesource.jansi", name: "jansi", version: "2.3.3"
+	implementation "info.picocli:picocli-jansi-graalvm:1.2.0"
+}
+
+compileJava {
+	// For PicoCLI annotation processor
+	options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
 }
 
 java {
@@ -52,22 +68,37 @@ spotless {
 	}
 }
 
+blossom {
+	replaceToken("__TINY_VERSION", project.version)
+	replaceToken("__ASM_VERSION", asmVersion)
+}
+
 test {
 	useJUnitPlatform()
 	testLogging {
 		showStandardStreams = true
-		exceptionFormat = 'full'
-		events = ['passed', 'failed', 'skipped']
+		exceptionFormat = "full"
+		events = ["passed", "failed", "skipped"]
 	}
 }
 
 jar {
 	manifest {
 		attributes	"Implementation-Title": "TinyRemapper",
-					"Implementation-Version": archiveVersion,
+					"Implementation-Version": version,
 					// TODO: Move to application plugin instead of placing this in the manifest directly
 					"Main-Class": "net.fabricmc.tinyremapper.Main",
 					"Automatic-Module-Name": "org.quiltmc.tinyremapper"
+	}
+}
+
+shadowJar {
+	archiveClassifier.set("fat")
+}
+
+build {
+	dependsOn {
+		shadowJar
 	}
 }
 
@@ -89,4 +120,31 @@ publishing {
 			}
 		}
 	}
+}
+
+// Manpage generator (included with PicoCLI)
+task generateManpageAsciiDoc(type: JavaExec) {
+	dependsOn classes
+	group = "Documentation"
+	description = "Generate AsciiDoc manpage"
+	classpath(configurations.runtimeClasspath, configurations.annotationProcessor, sourceSets.main.runtimeClasspath)
+	mainClass = "picocli.codegen.docgen.manpage.ManPageGenerator"
+	args "net.fabricmc.tinyremapper.Main", "--outdir=${project.buildDir}/generated-picocli-docs", "-v" //, "--template-dir=src/docs/mantemplates"
+}
+
+asciidoctor {
+	dependsOn generateManpageAsciiDoc
+	sourceDir = file("${project.buildDir}/generated-picocli-docs")
+	outputDir = file("${project.buildDir}/docs")
+	logDocuments = true
+	outputOptions {
+		backends = ["manpage", "html5"]
+	}
+}
+
+task githubCMDDocs(type: Copy) {
+	dependsOn asciidoctor
+	from "./build/docs/html5/tiny-remapper.html"
+	into "./docs/cli/"
+	rename "tiny-remapper.html", "index.html"
 }

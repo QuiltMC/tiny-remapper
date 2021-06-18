@@ -5,8 +5,11 @@
 /.settings/
 /.classpath
 /.project
+/.factorypath
 /.gradle
 *.jar
 *.tiny
 .idea/
+.settings/
+.vscode/
 !src/test/resources/**
