@@ -38,7 +38,7 @@ jobs:
         uses: EndBug/add-and-commit@v7
         with:
           add: "."
-          default-author: github_actions
+          default_author: github_actions
           message: Update docs
           push: true
           signoff: true
