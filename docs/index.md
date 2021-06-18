@@ -1,5 +1,8 @@
-# Tiny Remapper Documentation
+---
+layout: page
+title: Home
+---
 
-For the API Docs, click [here](https://quiltmc.github.io/tiny-remapper/javadoc).
+#### For the API Docs, click [here](javadoc).
 
-For the CLI Manpage, click [here](https://quiltmc.github.io/tiny-remapper/cli).
+#### For the CLI Manpage, click [here](cli).
