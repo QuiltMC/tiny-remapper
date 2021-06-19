@@ -22,7 +22,7 @@ title: Tiny Remapper Documentation
 # email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
   The online documentation for the QuiltMC tiny-remapper tool.
-baseurl: "" # the subpath of your site, e.g. /blog
+baseurl: "/tiny-remapper" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
