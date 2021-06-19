@@ -30,7 +30,7 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
 
       - name: Get git
-        run: apt install git
+        run: apt-get install git
 
       - name: Build docs
         run: |
