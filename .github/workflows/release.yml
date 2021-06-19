@@ -20,7 +20,7 @@ jobs:
     name: Generate Docs
     runs-on: ubuntu-latest
     container:
-      image: openjdk:16-jdk
+      image: openjdk:16-jdk-buster
       options: --user root
     steps:
       - name: Checkout Repo
