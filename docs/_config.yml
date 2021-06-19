@@ -24,13 +24,17 @@ description: >- # this means to ignore newlines until "baseurl:"
   The online documentation for the QuiltMC tiny-remapper tool.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: quilt_mc
-github_username:  quiltmc
 
 # Build settings
 theme: minima
-plugins:
-  - jekyll-feed
+
+twitter_username: quilt_mc
+github_username:  QuiltMC
+gitlab_username: quiltmc
+twitch_username: quiltmc
+discord_community: https://discord.quiltmc.org
+discord_toolchain: https://discord.quiltmc.org/toolchain
+matrix_url: https://matrix.to/#/+quiltmc:matrix.org
 
 # Exclude from processing.
 # The following items will not be processed, by default.
