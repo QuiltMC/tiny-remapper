@@ -29,10 +29,13 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
+      - name: Get git
+        run: apt install git
+
       - name: Build docs
         run: |
           chmod +x ./gradlew
-          ./gradlew githubCMDDocs --stacktrace
+          ./gradlew githubCMDDocs githubJavadoc --stacktrace
 
       - name: Create commit
         uses: EndBug/add-and-commit@v7

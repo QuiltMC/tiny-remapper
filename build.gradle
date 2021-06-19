@@ -148,3 +148,9 @@ task githubCMDDocs(type: Copy) {
 	into "./docs/cli/"
 	rename "tiny-remapper.html", "index.html"
 }
+
+task githubJavadoc(type: Copy) {
+	dependsOn javadoc
+	from "./build/docs/javadoc"
+	into "/docs/javadoc"
+}
