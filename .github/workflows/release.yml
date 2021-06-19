@@ -35,7 +35,7 @@ jobs:
       - name: Build docs
         run: |
           chmod +x ./gradlew
-          ./gradlew githubCMDDocs githubJavadoc --stacktrace
+          ./gradlew githubCMDDocs --stacktrace
 
       - name: Create commit
         uses: EndBug/add-and-commit@v7
