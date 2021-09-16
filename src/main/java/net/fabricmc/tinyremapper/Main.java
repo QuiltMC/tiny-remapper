@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Pattern;
 
 import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
 import picocli.CommandLine;
@@ -251,6 +252,13 @@ public final class Main implements Callable<Integer> {
 			description = "Rename invalid local variables.")
 	private boolean renameInvalidLocals;
 
+	private Pattern invalidLvNamePattern = null;
+
+	@Option(names = {"-P", "--invalid-lv-name-pattern"}, description = "Pattern for invalid Lv names")
+	private void invalidLvNamePattern(String value) {
+		invalidLvNamePattern = Pattern.compile(value);
+	}
+
 	// Non-class file copy mode option
 	private NonClassCopyMode ncCopyMode = NonClassCopyMode.FIX_META_INF;
 
@@ -323,6 +331,7 @@ public final class Main implements Callable<Integer> {
 				.rebuildSourceFilenames(rebuildSourceFilenames)
 				.skipLocalVariableMapping(skipLocalVariableMapping)
 				.renameInvalidLocals(renameInvalidLocals)
+				.invalidLvNamePattern(invalidLvNamePattern)
 				.threads(threads)
 				.build();
 

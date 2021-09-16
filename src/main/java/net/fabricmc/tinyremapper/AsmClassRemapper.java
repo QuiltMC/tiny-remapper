@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.lang.model.SourceVersion;
 
@@ -47,13 +48,14 @@ import org.objectweb.asm.tree.ParameterNode;
 import net.fabricmc.tinyremapper.MemberInstance.MemberType;
 
 final class AsmClassRemapper extends VisitTrackingClassRemapper {
-	public AsmClassRemapper(ClassVisitor cv, AsmRemapper remapper, boolean rebuildSourceFilenames, boolean checkPackageAccess, boolean skipLocalMapping, boolean renameInvalidLocals) {
+	public AsmClassRemapper(ClassVisitor cv, AsmRemapper remapper, boolean rebuildSourceFilenames, boolean checkPackageAccess, boolean skipLocalMapping, boolean renameInvalidLocals, Pattern invalidLvNamePattern) {
 		super(cv, remapper);
 
 		this.rebuildSourceFilenames = rebuildSourceFilenames;
 		this.checkPackageAccess = checkPackageAccess;
 		this.skipLocalMapping = skipLocalMapping;
 		this.renameInvalidLocals = renameInvalidLocals;
+		this.invalidLvNamePattern = invalidLvNamePattern;
 	}
 
 	@Override
@@ -124,7 +126,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 
 	@Override
 	protected MethodVisitor createMethodRemapper(MethodVisitor mv) {
-		return new AsmMethodRemapper(mv, remapper, className, methodNode, checkPackageAccess, skipLocalMapping, renameInvalidLocals);
+		return new AsmMethodRemapper(mv, remapper, className, methodNode, checkPackageAccess, skipLocalMapping, renameInvalidLocals, invalidLvNamePattern);
 	}
 
 	@Override
@@ -159,6 +161,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 	private final boolean checkPackageAccess;
 	private final boolean skipLocalMapping;
 	private final boolean renameInvalidLocals;
+	private final Pattern invalidLvNamePattern;
 	private boolean sourceNameVisited;
 	private MethodNode methodNode;
 
@@ -179,7 +182,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 	}
 
 	private static class AsmMethodRemapper extends MethodRemapper {
-		public AsmMethodRemapper(MethodVisitor methodVisitor, Remapper remapper, String owner, MethodNode methodNode, boolean checkPackageAccess, boolean skipLocalMapping, boolean renameInvalidLocals) {
+		public AsmMethodRemapper(MethodVisitor methodVisitor, Remapper remapper, String owner, MethodNode methodNode, boolean checkPackageAccess, boolean skipLocalMapping, boolean renameInvalidLocals, Pattern invalidLvNamePattern) {
 			super(methodNode != null ? methodNode : methodVisitor, remapper);
 
 			this.owner = owner;
@@ -188,6 +191,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 			this.checkPackageAccess = checkPackageAccess;
 			this.skipLocalMapping = skipLocalMapping;
 			this.renameInvalidLocals = renameInvalidLocals;
+			this.invalidLvNamePattern = invalidLvNamePattern;
 		}
 
 		@Override
@@ -366,7 +370,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 
 							lv.name = ((AsmRemapper) remapper).mapMethodVar(owner, methodNode.name, methodNode.desc, lv.index, startOpIdx, i, lv.name);
 
-							if (renameInvalidLocals && isValidJavaIdentifierAndNotKeyword(lv.name)) { // block valid name from generation
+							if (renameInvalidLocals && isValidLvName(lv.name)) { // block valid name from generation
 								nameCounts.putIfAbsent(lv.name, 1);
 							}
 						}
@@ -381,7 +385,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 				for (int i = 0; i < args.length; i++) {
 					args[i] = ((AsmRemapper) remapper).mapMethodArg(owner, methodNode.name, methodNode.desc, getLvIndex(i, isStatic, argTypes), args[i]);
 
-					if (renameInvalidLocals && isValidJavaIdentifierAndNotKeyword(args[i])) { // block valid name from generation
+					if (renameInvalidLocals && isValidLvName(args[i])) { // block valid name from generation
 						nameCounts.putIfAbsent(args[i], 1);
 					}
 				}
@@ -390,7 +394,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 			// fix args
 			if (renameInvalidLocals) {
 				for (int i = 0; i < args.length; i++) {
-					if (!isValidJavaIdentifierAndNotKeyword(args[i])) {
+					if (!isValidLvName(args[i])) {
 						args[i] = getNameFromType(remapper.mapDesc(argTypes[i].getDescriptor()), true);
 					}
 				}
@@ -426,7 +430,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 						lv.name = args[asmIndex];
 						argsWritten[asmIndex] = true;
 					} else { // var
-						if (renameInvalidLocals && !isValidJavaIdentifierAndNotKeyword(lv.name)) {
+						if (renameInvalidLocals && !isValidLvName(lv.name)) {
 							lv.name = getNameFromType(lv.desc, false);
 						}
 					}
@@ -654,8 +658,9 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 			}
 		}
 
-		private static boolean isValidJavaIdentifierAndNotKeyword(String s) {
-			return isValidJavaIdentifier(s) && !isJavaKeyword(s);
+		private boolean isValidLvName(String s) {
+			return isValidJavaIdentifier(s) && !isJavaKeyword(s)
+					&& (invalidLvNamePattern == null || !invalidLvNamePattern.matcher(s).matches());
 		}
 
 		private static boolean isValidJavaIdentifier(String s) {
@@ -683,6 +688,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 		private final boolean checkPackageAccess;
 		private final boolean skipLocalMapping;
 		private final boolean renameInvalidLocals;
+		private final Pattern invalidLvNamePattern;
 	}
 
 	private static class AsmAnnotationRemapper extends AnnotationRemapper {
