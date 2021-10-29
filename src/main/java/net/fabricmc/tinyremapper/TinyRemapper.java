@@ -18,7 +18,6 @@
 
 package net.fabricmc.tinyremapper;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -51,7 +50,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipError;
@@ -429,11 +427,6 @@ public class TinyRemapper {
 
 			assert dirty;
 		});
-	}
-
-	@Deprecated
-	private static void addClass(ClassInstance cls, Map<String, ClassInstance> out) {
-		addClass(cls, out, true);
 	}
 
 	private static void addClass(ClassInstance cls, Map<String, ClassInstance> out, boolean isVersionAware) {
@@ -993,6 +986,8 @@ public class TinyRemapper {
 
 			return;
 		}
+
+		outputBuffer = null;
 
 		if (!pendingReads.isEmpty()) {
 			for (CompletableFuture<?> future : pendingReads) {

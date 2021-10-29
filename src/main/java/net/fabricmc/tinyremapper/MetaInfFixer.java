@@ -39,9 +39,10 @@ public class MetaInfFixer implements OutputConsumerPath.ResourceRemapper {
 
 	@Override
 	public boolean canTransform(TinyRemapper remapper, Path relativePath) {
-		return shouldStripForFixMeta(relativePath) ||
-		       relativePath.getFileName().toString().equals("MANIFEST.MF") ||
-		       (remapper != null && relativePath.getNameCount() == 3 && relativePath.getName(1).toString().equals("services"));
+		return relativePath.startsWith("META-INF")
+				&& (shouldStripForFixMeta(relativePath)
+						|| relativePath.getFileName().toString().equals("MANIFEST.MF")
+						|| (remapper != null && relativePath.getNameCount() == 3 && relativePath.getName(1).toString().equals("services")));
 	}
 
 	@Override

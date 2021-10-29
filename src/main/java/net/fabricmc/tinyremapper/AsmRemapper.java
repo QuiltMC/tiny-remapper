@@ -22,7 +22,6 @@ import java.util.Collection;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Type;
-import org.objectweb.asm.commons.Remapper;
 
 import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
 import net.fabricmc.tinyremapper.TinyRemapper.MrjState;

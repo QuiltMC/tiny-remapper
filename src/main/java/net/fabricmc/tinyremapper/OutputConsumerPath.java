@@ -19,12 +19,10 @@
 package net.fabricmc.tinyremapper;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -149,7 +147,6 @@ public class OutputConsumerPath implements BiConsumer<String, byte[]>, Closeable
 		}
 	}
 
-
 	public void addNonClassFiles(Path srcDir, NonClassCopyMode copyMode, TinyRemapper remapper, boolean closeFs) throws IOException {
 		this.addNonClassFiles(srcDir, remapper, closeFs, copyMode.remappers);
 	}
@@ -163,6 +160,7 @@ public class OutputConsumerPath implements BiConsumer<String, byte[]>, Closeable
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					String fileName = file.getFileName().toString();
+
 					if (!fileName.endsWith(classSuffix)) {
 						Path relativePath = srcDir.relativize(file);
 						Path dstFile = dstDir.resolve(relativePath.toString()); // toString bypasses resolve requiring identical fs providers
