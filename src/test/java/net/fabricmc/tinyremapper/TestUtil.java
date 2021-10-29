@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016, 2018 Player, asie
+ * Copyright (C) 2021 QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -30,10 +31,11 @@ public class TestUtil {
 
 	public static void copyFile(Class<?> cls, String path)
 			throws IOException {
-		if (folder == null) { throw new RuntimeException("the temporary folder is not created"); }
+		if (folder == null) throw new RuntimeException("the temporary folder is not created");
 
 		try (InputStream input = cls.getResourceAsStream(path)) {
-			if (input == null) { throw new IOException("input is null"); }
+			if (input == null) throw new IOException("input is null");
+
 			byte[] buffer = new byte[input.available()];
 			//noinspection ResultOfMethodCallIgnored
 			input.read(buffer);

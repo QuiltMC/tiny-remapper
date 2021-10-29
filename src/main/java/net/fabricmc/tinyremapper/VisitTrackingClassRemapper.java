@@ -64,7 +64,6 @@ public abstract class VisitTrackingClassRemapper extends ClassRemapper {
 		super.visitPermittedSubclass(permittedSubclass);
 	}
 
-
 	@Override
 	public void visitOuterClass(String owner, String name, String descriptor) {
 		onVisit(VisitKind.OUTER_CLASS);

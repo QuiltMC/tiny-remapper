@@ -27,7 +27,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.zip.GZIPInputStream;
 
@@ -38,7 +45,7 @@ import net.fabricmc.tinyremapper.IMappingProvider.Member;
 
 public final class TinyUtils {
 	private static final class MemberMapping {
-		public MemberMapping(Member member, String newName) {
+		MemberMapping(Member member, String newName) {
 			this.member = member;
 			this.newName = newName;
 		}
@@ -48,7 +55,7 @@ public final class TinyUtils {
 	}
 
 	private static final class MethodArgMapping {
-		public MethodArgMapping(Member method, int lvIndex, String newName) {
+		MethodArgMapping(Member method, int lvIndex, String newName) {
 			this.method = method;
 			this.lvIndex = lvIndex;
 			this.newName = newName;
@@ -60,7 +67,7 @@ public final class TinyUtils {
 	}
 
 	private static final class MethodVarMapping {
-		public MethodVarMapping(Member method, int lvIndex, int startOpIdx, int asmIndex, String newName) {
+		MethodVarMapping(Member method, int lvIndex, int startOpIdx, int asmIndex, String newName) {
 			this.method = method;
 			this.lvIndex = lvIndex;
 			this.startOpIdx = startOpIdx;
@@ -76,7 +83,7 @@ public final class TinyUtils {
 	private static class SimpleClassMapper extends Remapper {
 		final Map<String, String> classMap;
 
-		public SimpleClassMapper(Map<String, String> map) {
+		SimpleClassMapper(Map<String, String> map) {
 			this.classMap = map;
 		}
 
@@ -86,9 +93,7 @@ public final class TinyUtils {
 		}
 	}
 
-	private TinyUtils() {
-
-	}
+	private TinyUtils() { }
 
 	public static IMappingProvider createTinyMappingProvider(final Path mappings, String fromM, String toM) {
 		return out -> {
@@ -218,8 +223,8 @@ public final class TinyUtils {
 		if (toIndex < 0) throw new IOException("Could not find mapping '" + to + "'!");
 
 		Map<String, String> obfFrom = fromIndex != 0 ? new HashMap<>() : null;
-
 		String line;
+
 		while ((line = reader.readLine()) != null) {
 			String[] splitLine = line.split("\t");
 			if (splitLine.length < 2) continue;

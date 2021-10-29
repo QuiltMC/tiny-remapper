@@ -22,29 +22,58 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import org.objectweb.asm.Opcodes;
 
-public final class MemberInstance {
-	MemberInstance(MemberInstance.MemberType type, ClassInstance cls, String name, String desc, int access) {
+import net.fabricmc.tinyremapper.TinyRemapper.MrjState;
+import net.fabricmc.tinyremapper.api.TrClass;
+import net.fabricmc.tinyremapper.api.TrField;
+import net.fabricmc.tinyremapper.api.TrMember;
+import net.fabricmc.tinyremapper.api.TrMethod;
+
+public final class MemberInstance implements TrField, TrMethod {
+	MemberInstance(TrMember.MemberType type, ClassInstance cls, String name, String desc, int access, int index) {
 		this.type = type;
 		this.cls = cls;
 		this.name = name;
 		this.desc = desc;
 		this.access = access;
+		this.index = index;
 	}
 
-	public TinyRemapper getContext() {
-		return cls.context;
+	@Override
+	public MemberType getType() {
+		return this.type;
+	}
+
+	@Override
+	public TrClass getOwner() {
+		return this.cls;
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
+	}
+
+	@Override
+	public String getDesc() {
+		return this.desc;
+	}
+
+	@Override
+	public int getAccess() {
+		return this.access;
+	}
+
+	@Override
+	public int getIndex() {
+		return index;
+	}
+
+	public MrjState getContext() {
+		return cls.getContext();
 	}
 
 	public String getId() {
-		return getId(type, name, desc, cls.context.ignoreFieldDesc);
-	}
-
-	public boolean isStatic() {
-		return (access & Opcodes.ACC_STATIC) != 0;
-	}
-
-	public boolean isVirtual() {
-		return type == MemberType.METHOD && (access & (Opcodes.ACC_STATIC | Opcodes.ACC_PRIVATE)) == 0;
+		return getId(type, name, desc, cls.tr.ignoreFieldDesc);
 	}
 
 	public boolean isBridge() {
@@ -55,10 +84,7 @@ public final class MemberInstance {
 		return (access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PRIVATE)) != 0;
 	}
 
-	public boolean isProtected() {
-		return (access & Opcodes.ACC_PROTECTED) != 0;
-	}
-
+	@Override
 	public String getNewName() {
 		String ret = newBridgedName;
 
@@ -96,8 +122,8 @@ public final class MemberInstance {
 		return String.format("%s/%s%s", cls.getName(), name, desc);
 	}
 
-	public static String getId(MemberType type, String name, String desc, boolean ignoreFieldDesc) {
-		return type == MemberType.METHOD ? getMethodId(name, desc) : getFieldId(name, desc, ignoreFieldDesc);
+	public static String getId(TrMember.MemberType type, String name, String desc, boolean ignoreFieldDesc) {
+		return type == TrMember.MemberType.METHOD ? getMethodId(name, desc) : getFieldId(name, desc, ignoreFieldDesc);
 	}
 
 	public static String getMethodId(String name, String desc) {
@@ -108,11 +134,11 @@ public final class MemberInstance {
 		return ignoreDesc ? name : name+";;"+desc;
 	}
 
-	public static String getNameFromId(MemberType type, String id, boolean ignoreFieldDesc) {
-		if (ignoreFieldDesc && type == MemberType.FIELD) {
+	public static String getNameFromId(TrMember.MemberType type, String id, boolean ignoreFieldDesc) {
+		if (ignoreFieldDesc && type == TrMember.MemberType.FIELD) {
 			return id;
 		} else {
-			String separator = type == MemberType.METHOD ? "(" : ";;";
+			String separator = type == TrMember.MemberType.METHOD ? "(" : ";;";
 			int pos = id.lastIndexOf(separator);
 			if (pos < 0) throw new IllegalArgumentException(String.format("invalid %s id: %s", type.name(), id));
 
@@ -120,19 +146,15 @@ public final class MemberInstance {
 		}
 	}
 
-	enum MemberType {
-		METHOD,
-		FIELD
-	}
-
 	private static final AtomicReferenceFieldUpdater<MemberInstance, String> newNameUpdater = AtomicReferenceFieldUpdater.newUpdater(MemberInstance.class, String.class, "newName");
 	private static final AtomicReferenceFieldUpdater<MemberInstance, String> newBridgedNameUpdater = AtomicReferenceFieldUpdater.newUpdater(MemberInstance.class, String.class, "newBridgedName");
 
-	final MemberInstance.MemberType type;
+	final TrMember.MemberType type;
 	final ClassInstance cls;
 	final String name;
 	final String desc;
 	final int access;
+	final int index;
 	private volatile String newName;
 	private volatile String newBridgedName;
 	String newNameOriginatingCls;
