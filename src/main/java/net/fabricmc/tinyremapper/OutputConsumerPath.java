@@ -19,14 +19,12 @@
 package net.fabricmc.tinyremapper;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.BufferedInputStream;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -47,7 +45,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-
 
 public class OutputConsumerPath implements BiConsumer<String, byte[]>, Closeable {
 	public static class Builder {
@@ -169,14 +166,16 @@ public class OutputConsumerPath implements BiConsumer<String, byte[]>, Closeable
 					if (!fileName.endsWith(classSuffix)) {
 						Path relativePath = srcDir.relativize(file);
 						Path dstFile = dstDir.resolve(relativePath.toString()); // toString bypasses resolve requiring identical fs providers
+
 						for (ResourceRemapper resourceRemapper : resourceRemappers) {
-							if(resourceRemapper.canTransform(remapper, relativePath)) {
-								try(InputStream input = new BufferedInputStream(Files.newInputStream(file))) {
+							if (resourceRemapper.canTransform(remapper, relativePath)) {
+								try (InputStream input = new BufferedInputStream(Files.newInputStream(file))) {
 									resourceRemapper.transform(dstDir, relativePath, input, remapper);
 									return FileVisitResult.CONTINUE;
 								}
 							}
 						}
+
 						createParentDirs(dstFile);
 						Files.copy(file, dstFile, StandardCopyOption.REPLACE_EXISTING);
 					}
@@ -195,11 +194,13 @@ public class OutputConsumerPath implements BiConsumer<String, byte[]>, Closeable
 	public void accept(String clsName, byte[] data) {
 		if (classNameFilter != null && !classNameFilter.test(clsName)) return;
 
+		Path dstFile = null;
+
 		try {
 			if (lock != null) lock.lock();
 			if (closed) throw new IllegalStateException("consumer already closed");
 
-			Path dstFile = dstDir.resolve(clsName + classSuffix);
+			dstFile = dstDir.resolve(clsName + classSuffix);
 
 			if (isJarFs && Files.exists(dstFile)) {
 				if (Files.isDirectory(dstFile)) throw new FileAlreadyExistsException("dst file "+dstFile+" is a directory");
@@ -210,7 +211,7 @@ public class OutputConsumerPath implements BiConsumer<String, byte[]>, Closeable
 			createParentDirs(dstFile);
 			Files.write(dstFile, data);
 		} catch (IOException e) {
-			throw new UncheckedIOException(e);
+			throw new UncheckedIOException("error writing to "+dstFile, e);
 		} finally {
 			if (lock != null) lock.unlock();
 		}

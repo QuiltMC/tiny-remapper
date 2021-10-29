@@ -24,7 +24,8 @@ import org.objectweb.asm.ConstantDynamic;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 
-import net.fabricmc.tinyremapper.MemberInstance.MemberType;
+import net.fabricmc.tinyremapper.api.TrMember.MemberType;
+import net.fabricmc.tinyremapper.api.TrMember;
 
 public final class PackageAccessChecker {
 	/**
@@ -65,7 +66,7 @@ public final class PackageAccessChecker {
 				mappedAccessor,
 				mappedTarget);
 
-		remapper.remapper.classesToMakePublic.add(targetCls);
+		remapper.tr.classesToMakePublic.add(targetCls);
 	}
 
 	/**
@@ -117,7 +118,7 @@ public final class PackageAccessChecker {
 		if (cls == null) return;
 		cls = cls.getMrjOrigin();
 
-		String id = MemberInstance.getId(type, name, desc, remapper.remapper.ignoreFieldDesc);
+		String id = MemberInstance.getId(type, name, desc, remapper.tr.ignoreFieldDesc);
 		MemberInstance member = cls.resolve(type, id);	// cls is already the correct version
 
 		if (member == null) {
@@ -199,7 +200,7 @@ public final class PackageAccessChecker {
 					member.isProtected() ? "protected" : "package-private",
 							type.name().toLowerCase(Locale.ENGLISH),
 							remapper.map(member.cls.getName()),
-							MemberInstance.getId(type, mappedName, mappedDesc, remapper.remapper.ignoreFieldDesc));
+							MemberInstance.getId(type, mappedName, mappedDesc, remapper.tr.ignoreFieldDesc));
 
 			if (inaccessible == null) {
 				inaccessible = memberMsg;
@@ -213,8 +214,8 @@ public final class PackageAccessChecker {
 				mappedAccessor,
 				inaccessible);
 
-		if (!clsAccessible) remapper.remapper.classesToMakePublic.add(cls);
-		if (!memberAccessible) remapper.remapper.membersToMakePublic.add(member);
+		if (!clsAccessible) remapper.tr.classesToMakePublic.add(cls);
+		if (!memberAccessible) remapper.tr.membersToMakePublic.add(member);
 	}
 
 	private static boolean isSamePackage(String clsA, int pkgEnd, String clsB) {

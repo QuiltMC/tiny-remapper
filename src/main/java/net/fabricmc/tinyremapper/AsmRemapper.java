@@ -18,23 +18,30 @@
 
 package net.fabricmc.tinyremapper;
 
+import java.util.Collection;
+
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Remapper;
 
-import net.fabricmc.tinyremapper.MemberInstance.MemberType;
 import net.fabricmc.tinyremapper.TinyRemapper.LinkedMethodPropagation;
+import net.fabricmc.tinyremapper.TinyRemapper.MrjState;
+import net.fabricmc.tinyremapper.api.TrMember;
+import net.fabricmc.tinyremapper.api.TrMethod;
+import net.fabricmc.tinyremapper.api.TrRemapper;
 
-class AsmRemapper extends Remapper {
-	public AsmRemapper(TinyRemapper remapper) {
-		this.remapper = remapper;
+class AsmRemapper extends TrRemapper {
+	AsmRemapper(MrjState context) {
+		this.context = context;
+		this.tr = context.tr;
 	}
 
 	@Override
 	public String map(String typeName) {
-		String ret = remapper.classMap.get(typeName);
+		String ret = tr.classMap.get(typeName);
 		if (ret != null) return ret;
 
-		return remapper.extraRemapper != null ? remapper.extraRemapper.map(typeName) : typeName;
+		return tr.extraRemapper != null ? tr.extraRemapper.map(typeName) : typeName;
 	}
 
 	@Override
@@ -42,16 +49,20 @@ class AsmRemapper extends Remapper {
 		ClassInstance cls = getClass(owner);
 		if (cls == null) return name;
 
-		MemberInstance member = cls.resolve(MemberType.FIELD, MemberInstance.getFieldId(name, desc, remapper.ignoreFieldDesc));
+		return mapFieldName(cls, name, desc);
+	}
+
+	final String mapFieldName(ClassInstance cls, String name, String desc) {
+		MemberInstance member = cls.resolve(TrMember.MemberType.FIELD, MemberInstance.getFieldId(name, desc, tr.ignoreFieldDesc));
 		String newName;
 
 		if (member != null && (newName = member.getNewName()) != null) {
 			return newName;
 		}
 
-		assert (newName = remapper.fieldMap.get(owner+"/"+MemberInstance.getFieldId(name, desc, remapper.ignoreFieldDesc))) == null || newName.equals(name);
+		assert (newName = tr.fieldMap.get(cls.getName()+"/"+MemberInstance.getFieldId(name, desc, tr.ignoreFieldDesc))) == null || newName.equals(name);
 
-		return remapper.extraRemapper != null ? remapper.extraRemapper.mapFieldName(owner, name, desc) : name;
+		return tr.extraRemapper != null ? tr.extraRemapper.mapFieldName(cls.getName(), name, desc) : name;
 	}
 
 	@Override
@@ -68,23 +79,29 @@ class AsmRemapper extends Remapper {
 		ClassInstance cls = getClass(owner);
 		if (cls == null) return name; // TODO: try to map these from just the mappings?, warn if actual class is missing
 
-		MemberInstance member = cls.resolve(MemberType.METHOD, MemberInstance.getMethodId(name, desc));
+		return mapMethodName(cls, name, desc);
+	}
+
+	final String mapMethodName(ClassInstance cls, String name, String desc) {
+		MemberInstance member = cls.resolve(TrMember.MemberType.METHOD, MemberInstance.getMethodId(name, desc));
 		String newName;
 
 		if (member != null && (newName = member.getNewName()) != null) {
 			return newName;
 		}
 
-		assert (newName = remapper.methodMap.get(owner+"/"+MemberInstance.getMethodId(name, desc))) == null || newName.equals(name);
+		assert (newName = tr.methodMap.get(cls.getName()+"/"+MemberInstance.getMethodId(name, desc))) == null || newName.equals(name);
 
-		return remapper.extraRemapper != null ? remapper.extraRemapper.mapMethodName(owner, name, desc) : name;
+		return tr.extraRemapper != null ? tr.extraRemapper.mapMethodName(cls.getName(), name, desc) : name;
 	}
 
+	@Override
 	public String mapMethodNamePrefixDesc(String owner, String name, String descPrefix) {
 		ClassInstance cls = getClass(owner);
 		if (cls == null) return name;
 
-		MemberInstance member = cls.resolvePartial(MemberType.METHOD, name, descPrefix);
+		Collection<TrMethod> members = cls.resolveMethods(name, descPrefix, true, null, null);
+		MemberInstance member = members.size() == 1 ? (MemberInstance) members.iterator().next() : null;
 		String newName;
 
 		if (member != null && (newName = member.getNewName()) != null) {
@@ -102,17 +119,18 @@ class AsmRemapper extends Remapper {
 		return mapMethodNamePrefixDesc(owner, name, null);
 	}
 
+	@Override
 	public String mapMethodArg(String methodOwner, String methodName, String methodDesc, int lvIndex, String name) {
-		String newName = remapper.methodArgMap.get(methodOwner+"/"+MemberInstance.getMethodId(methodName, methodDesc)+lvIndex);
+		String newName = tr.methodArgMap.get(methodOwner+"/"+MemberInstance.getMethodId(methodName, methodDesc)+lvIndex);
 		if (newName != null) return newName;
 
 		ClassInstance cls = getClass(methodOwner);
 		if (cls == null) return name;
 
-		MemberInstance originatingMethod = cls.resolve(MemberType.METHOD, MemberInstance.getMethodId(methodName, methodDesc));
+		MemberInstance originatingMethod = cls.resolve(TrMember.MemberType.METHOD, MemberInstance.getMethodId(methodName, methodDesc));
 		if (originatingMethod == null) return name;
 
-		String originatingNewName = remapper.methodArgMap.get(originatingMethod.newNameOriginatingCls+"/"+MemberInstance.getMethodId(originatingMethod.name, originatingMethod.desc)+lvIndex);
+		String originatingNewName = tr.methodArgMap.get(originatingMethod.newNameOriginatingCls+"/"+MemberInstance.getMethodId(originatingMethod.name, originatingMethod.desc)+lvIndex);
 
 		return originatingNewName != null ? originatingNewName : name;
 	}
@@ -121,11 +139,27 @@ class AsmRemapper extends Remapper {
 		return name; // TODO: implement
 	}
 
+	@Override
+	public String mapAnnotationAttributeName(String descriptor, String name) {
+		throw new RuntimeException("Deprecated function");
+	}
+
+	@Override
+	public String mapAnnotationAttributeName(final String annotationDesc, final String name, String attributeDesc) {
+		String annotationClass = Type.getType(annotationDesc).getInternalName();
+
+		if (attributeDesc == null) {
+			return this.mapMethodNamePrefixDesc(annotationClass, name, "()");
+		} else {
+			return this.mapMethodName(annotationClass, name, "()" + attributeDesc);
+		}
+	}
+
 	void finish(String className, ClassVisitor cv) {
 		ClassInstance cls = null;
 
-		if (remapper.propagateBridges == LinkedMethodPropagation.COMPATIBLE
-				|| remapper.propagateRecordComponents == LinkedMethodPropagation.COMPATIBLE) {
+		if (tr.propagateBridges == LinkedMethodPropagation.COMPATIBLE
+				|| tr.propagateRecordComponents == LinkedMethodPropagation.COMPATIBLE) {
 			cls = getClass(className);
 
 			if (cls != null) {
@@ -135,8 +169,9 @@ class AsmRemapper extends Remapper {
 	}
 
 	ClassInstance getClass(String owner) {
-		return remapper.getClass(owner);
+		return context.getClass(owner);
 	}
 
-	final TinyRemapper remapper;
+	final MrjState context;
+	final TinyRemapper tr;
 }

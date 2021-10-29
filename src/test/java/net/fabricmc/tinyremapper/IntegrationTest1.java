@@ -57,7 +57,6 @@ public class IntegrationTest1 {
 
 	private TinyRemapper setupRemapper() {
 		// copy from Main.java
-		final boolean reverse = false;
 		final boolean ignoreFieldDesc = false;
 		final boolean propagatePrivate = false;
 		final boolean removeFrames = false;

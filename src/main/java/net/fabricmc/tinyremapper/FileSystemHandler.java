@@ -21,6 +21,7 @@ package net.fabricmc.tinyremapper;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystemAlreadyExistsException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.util.Collections;
@@ -36,19 +37,18 @@ import java.util.Map;
  */
 public final class FileSystemHandler {
 	public static synchronized FileSystem open(URI uri) throws IOException {
+		boolean opened = false;
 		FileSystem ret = null;
 
 		try {
 			ret = FileSystems.getFileSystem(uri);
-		} catch (FileSystemNotFoundException e) { }
-
-		boolean opened;
-
-		if (ret == null) {
-			ret = FileSystems.newFileSystem(uri, Collections.emptyMap());
-			opened = true;
-		} else {
-			opened = false;
+		} catch (FileSystemNotFoundException e) {
+			try {
+				ret = FileSystems.newFileSystem(uri, Collections.emptyMap());
+				opened = true;
+			} catch (FileSystemAlreadyExistsException f) {
+				ret = FileSystems.getFileSystem(uri);
+			}
 		}
 
 		RefData data = fsRefs.get(ret);
@@ -74,7 +74,7 @@ public final class FileSystemHandler {
 	}
 
 	private static class RefData {
-		public RefData(boolean opened, int refs) {
+		RefData(boolean opened, int refs) {
 			this.opened = opened;
 			this.refs = refs;
 		}

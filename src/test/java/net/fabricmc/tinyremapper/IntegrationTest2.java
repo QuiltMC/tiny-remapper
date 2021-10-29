@@ -56,7 +56,6 @@ public class IntegrationTest2 {
 
 	private TinyRemapper setupRemapper() {
 		// copy from Main.java
-		final boolean reverse = false;
 		final boolean ignoreFieldDesc = false;
 		final boolean propagatePrivate = false;
 		final boolean removeFrames = false;
@@ -94,7 +93,8 @@ public class IntegrationTest2 {
 	}
 
 	/**
-	 * This is a test for package access fix
+	 * This is a test for package access fix.
+	 *
 	 * @throws IOException io failure.
 	 */
 	@Test

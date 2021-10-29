@@ -48,7 +48,7 @@ public class MetaInfFixer implements OutputConsumerPath.ResourceRemapper {
 	public void transform(Path destinationDirectory, Path relativePath, InputStream input, TinyRemapper remapper) throws IOException {
 		String fileName = relativePath.getFileName().toString();
 
-		if (fileName.equals("MANIFEST.MF")) {
+		if (relativePath.getNameCount() == 2 && fileName.equals("MANIFEST.MF")) {
 			Manifest manifest = new Manifest(input);
 			fixManifest(manifest, remapper);
 
@@ -60,11 +60,12 @@ public class MetaInfFixer implements OutputConsumerPath.ResourceRemapper {
 				manifest.write(os);
 			}
 		} else if (remapper != null && relativePath.getNameCount() == 3 && relativePath.getName(1).toString().equals("services")) {
-			fileName = mapFullyQualifiedClassName(fileName, remapper);
-			Path newFile = destinationDirectory.resolve(relativePath).resolveSibling(fileName);
-			Files.createDirectories(newFile.getParent());
+			Path outputDir = destinationDirectory.resolve(relativePath).getParent();
+			Files.createDirectories(outputDir);
+			Path outputFile = outputDir.resolve(mapFullyQualifiedClassName(fileName, remapper));
+
 			try (BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-			     BufferedWriter writer = Files.newBufferedWriter(newFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
+					BufferedWriter writer = Files.newBufferedWriter(outputFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)) {
 				fixServiceDecl(reader, writer, remapper);
 			}
 		}
@@ -79,15 +80,15 @@ public class MetaInfFixer implements OutputConsumerPath.ResourceRemapper {
 
 		// https://docs.oracle.com/en/java/javase/12/docs/specs/jar/jar.html#signed-jar-file
 		return fileName.endsWith(".SF")
-		       || fileName.endsWith(".DSA")
-		       || fileName.endsWith(".RSA")
-		       || fileName.startsWith("SIG-");
+				|| fileName.endsWith(".DSA")
+				|| fileName.endsWith(".RSA")
+				|| fileName.startsWith("SIG-");
 	}
 
-	private static String mapFullyQualifiedClassName(String name, TinyRemapper remapper) {
+	private static String mapFullyQualifiedClassName(String name, TinyRemapper tr) {
 		assert name.indexOf('/') < 0;
 
-		return remapper.mapClass(name.replace('.', '/')).replace('/', '.');
+		return tr.defaultState.remapper.map(name.replace('.', '/')).replace('/', '.');
 	}
 
 	private static void fixManifest(Manifest manifest, TinyRemapper remapper) {
