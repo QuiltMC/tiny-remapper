@@ -117,59 +117,69 @@ public class TinyRemapper {
 			return this;
 		}
 
+		@Deprecated
 		public Builder removeFrames(boolean value) {
-			removeFrames = value;
+			this.configuration.setRemoveFrames(value);
 			return this;
 		}
 
+		@Deprecated
 		public Builder ignoreConflicts(boolean value) {
-			ignoreConflicts = value;
+			this.configuration.setIgnoreConflicts(value);
 			return this;
 		}
 
+		@Deprecated
 		public Builder resolveMissing(boolean value) {
-			resolveMissing = value;
+			this.configuration.setResolveMissing(value);
 			return this;
 		}
 
+		@Deprecated
 		public Builder checkPackageAccess(boolean value) {
-			checkPackageAccess = value;
+			this.configuration.setCheckPackageAccess(value);
 			return this;
 		}
 
+		@Deprecated
 		public Builder fixPackageAccess(boolean value) {
-			fixPackageAccess = value;
+			this.configuration.setFixPackageAccess(value);
 			return this;
 		}
 
+		@Deprecated
 		public Builder rebuildSourceFilenames(boolean value) {
-			rebuildSourceFilenames = value;
+			this.configuration.setRebuildSourceFilenames(value);
 			return this;
 		}
 
+		@Deprecated
 		public Builder skipLocalVariableMapping(boolean value) {
-			skipLocalMapping = value;
+			this.configuration.setSkipLocalVariableMapping(value);
 			return this;
 		}
 
+		@Deprecated
 		public Builder renameInvalidLocals(boolean value) {
-			renameInvalidLocals = value;
+			this.configuration.setRenameInvalidLocals(value);
 			return this;
 		}
 
 		/**
 		 * Pattern that flags matching local variable (and arg) names as invalid for the usual renameInvalidLocals processing.
 		 */
+		@Deprecated
 		public Builder invalidLvNamePattern(Pattern value) {
-			this.invalidLvNamePattern = value;
+			this.configuration.setInvalidLvNamePattern(value);
 			return this;
 		}
 
 		/**
 		 * Whether to copy lv names from other local variables if the original name was missing or invalid.
 		 */
+		@Deprecated
 		public Builder inferNameFromSameLvIndex(boolean value) {
-			this.inferNameFromSameLvIndex = value;
+			this.configuration.setInferNameFromSameLvIndex(value);
 			return this;
 		}
 
@@ -217,8 +227,7 @@ public class TinyRemapper {
 					keepInputData,
 					forcePropagation, propagatePrivate,
 					propagateBridges, propagateRecordComponents,
-					removeFrames, ignoreConflicts, resolveMissing, checkPackageAccess || fixPackageAccess, fixPackageAccess,
-					rebuildSourceFilenames, skipLocalMapping, renameInvalidLocals, invalidLvNamePattern, inferNameFromSameLvIndex,
+					configuration,
 					analyzeVisitors, stateProcessors, preApplyVisitors, postApplyVisitors,
 					extraRemapper);
 
@@ -233,21 +242,12 @@ public class TinyRemapper {
 		private boolean propagatePrivate = false;
 		private LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
 		private LinkedMethodPropagation propagateRecordComponents = LinkedMethodPropagation.DISABLED;
-		private boolean removeFrames = false;
-		private boolean ignoreConflicts = false;
-		private boolean resolveMissing = false;
-		private boolean checkPackageAccess = false;
-		private boolean fixPackageAccess = false;
-		private boolean rebuildSourceFilenames = false;
-		private boolean skipLocalMapping = false;
-		private boolean renameInvalidLocals = false;
-		private Pattern invalidLvNamePattern;
-		private boolean inferNameFromSameLvIndex;
 		private final List<AnalyzeVisitorProvider> analyzeVisitors = new ArrayList<>();
 		private final List<StateProcessor> stateProcessors = new ArrayList<>();
 		private final List<ApplyVisitorProvider> preApplyVisitors = new ArrayList<>();
 		private final List<ApplyVisitorProvider> postApplyVisitors = new ArrayList<>();
 		private Remapper extraRemapper;
+		private TinyRemapperConfiguration configuration;
 	}
 
 	public interface Extension {
@@ -271,14 +271,7 @@ public class TinyRemapper {
 			boolean keepInputData,
 			Set<String> forcePropagation, boolean propagatePrivate,
 			LinkedMethodPropagation propagateBridges, LinkedMethodPropagation propagateRecordComponents,
-			boolean removeFrames,
-			boolean ignoreConflicts,
-			boolean resolveMissing,
-			boolean checkPackageAccess,
-			boolean fixPackageAccess,
-			boolean rebuildSourceFilenames,
-			boolean skipLocalMapping,
-			boolean renameInvalidLocals, Pattern invalidLvNamePattern, boolean inferNameFromSameLvIndex,
+			TinyRemapperConfiguration configuration,
 			List<AnalyzeVisitorProvider> analyzeVisitors, List<StateProcessor> stateProcessors,
 			List<ApplyVisitorProvider> preApplyVisitors, List<ApplyVisitorProvider> postApplyVisitors,
 			Remapper extraRemapper) {
@@ -291,16 +284,7 @@ public class TinyRemapper {
 		this.propagatePrivate = propagatePrivate;
 		this.propagateBridges = propagateBridges;
 		this.propagateRecordComponents = propagateRecordComponents;
-		this.removeFrames = removeFrames;
-		this.ignoreConflicts = ignoreConflicts;
-		this.resolveMissing = resolveMissing;
-		this.checkPackageAccess = checkPackageAccess;
-		this.fixPackageAccess = fixPackageAccess;
-		this.rebuildSourceFilenames = rebuildSourceFilenames;
-		this.skipLocalMapping = skipLocalMapping;
-		this.renameInvalidLocals = renameInvalidLocals;
-		this.invalidLvNamePattern = invalidLvNamePattern;
-		this.inferNameFromSameLvIndex = inferNameFromSameLvIndex;
+		this.configuration = configuration;
 		this.analyzeVisitors = analyzeVisitors;
 		this.stateProcessors = stateProcessors;
 		this.preApplyVisitors = preApplyVisitors;
@@ -829,7 +813,7 @@ public class TinyRemapper {
 
 				System.out.printf("  %s %s %s (%s) -> %s%n", member.cls.getName(), member.type.name(), member.name, member.desc, names);
 
-				if (ignoreConflicts) {
+				if (configuration.ignoreConflicts()) {
 					Map<String, String> mappings = member.type == TrMember.MemberType.METHOD ? methodMap : fieldMap;
 					String mappingName = mappings.get(member.cls.getName()+"/"+member.getId());
 
@@ -855,8 +839,8 @@ public class TinyRemapper {
 			}
 		}
 
-		if (!conflicts.isEmpty() && !ignoreConflicts || unfixableConflicts || targetNameCheckFailed) {
-			if (ignoreConflicts || targetNameCheckFailed) System.out.println("There were unfixable conflicts.");
+		if (!conflicts.isEmpty() && !configuration.ignoreConflicts() || unfixableConflicts || targetNameCheckFailed) {
+			if (configuration.ignoreConflicts() || targetNameCheckFailed) System.out.println("There were unfixable conflicts.");
 
 			throw new RuntimeException("Unfixable conflicts");
 		}
@@ -879,7 +863,7 @@ public class TinyRemapper {
 			if (outputBuffer == null) { // first (inputTags present) or full (no input tags) output invocation, process everything but don't output if input tags are present
 				BiConsumer<ClassInstance, byte[]> immediateOutputConsumer;
 
-				if (fixPackageAccess || hasInputTags) { // need re-processing or output buffering for repeated applies
+				if (configuration.fixPackageAccess() || hasInputTags) { // need re-processing or output buffering for repeated applies
 					outputBuffer = new ConcurrentHashMap<>();
 					immediateOutputConsumer = outputBuffer::put;
 				} else {
@@ -907,7 +891,7 @@ public class TinyRemapper {
 
 				boolean needsFixes = !classesToMakePublic.isEmpty() || !membersToMakePublic.isEmpty();
 
-				if (fixPackageAccess) {
+				if (configuration.fixPackageAccess()) {
 					if (needsFixes) {
 						System.out.printf("Fixing access for %d classes and %d members.%n", classesToMakePublic.size(), membersToMakePublic.size());
 					}
@@ -1049,7 +1033,7 @@ public class TinyRemapper {
 	private byte[] apply(final ClassInstance cls) {
 		ClassReader reader = new ClassReader(cls.data);
 		ClassWriter writer = new ClassWriter(0);
-		int flags = removeFrames ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES;
+		int flags = configuration.removeFrames() ? ClassReader.SKIP_FRAMES : ClassReader.EXPAND_FRAMES;
 
 		ClassVisitor visitor = writer;
 
@@ -1061,8 +1045,9 @@ public class TinyRemapper {
 			visitor = postApplyVisitors.get(i).insertApplyVisitor(cls, visitor);
 		}
 
-		visitor = new AsmClassRemapper(visitor, cls.getContext().remapper, rebuildSourceFilenames,
-				checkPackageAccess, skipLocalMapping, renameInvalidLocals, invalidLvNamePattern, inferNameFromSameLvIndex);
+		visitor = new AsmClassRemapper(visitor, cls.getContext().remapper, configuration.rebuildSourceFilenames(),
+				configuration.checkPackageAccess(), configuration.skipLocalVariableMapping(), configuration.renameInvalidLocals(),
+				configuration.getInvalidLvNamePattern(), configuration.inferNameFromSameLvIndex());
 
 		for (int i = preApplyVisitors.size() - 1; i >= 0; i--) {
 			visitor = preApplyVisitors.get(i).insertApplyVisitor(cls, visitor);
@@ -1226,7 +1211,7 @@ public class TinyRemapper {
 					continue; // no name change
 				}
 
-				MemberInstance member = resolveMissing ? cls.resolve(type, idSrc) : cls.getMember(type, idSrc);
+				MemberInstance member = configuration.resolveMissing() ? cls.resolve(type, idSrc) : cls.getMember(type, idSrc);
 
 				if (member == null) {
 					// not available for this Side
@@ -1308,20 +1293,11 @@ public class TinyRemapper {
 	final boolean propagatePrivate;
 	final LinkedMethodPropagation propagateBridges;
 	final LinkedMethodPropagation propagateRecordComponents;
-	private final boolean removeFrames;
-	private final boolean ignoreConflicts;
-	private final boolean resolveMissing;
-	private final boolean checkPackageAccess;
-	private final boolean fixPackageAccess;
-	private final boolean rebuildSourceFilenames;
-	private final boolean skipLocalMapping;
-	private final boolean renameInvalidLocals;
-	private final Pattern invalidLvNamePattern;
-	private final boolean inferNameFromSameLvIndex;
 	private final List<AnalyzeVisitorProvider> analyzeVisitors;
 	private final List<StateProcessor> stateProcessors;
 	private final List<ApplyVisitorProvider> preApplyVisitors;
 	private final List<ApplyVisitorProvider> postApplyVisitors;
+	final TinyRemapperConfiguration configuration;
 	final Remapper extraRemapper;
 
 	final AtomicReference<Map<InputTag, InputTag[]>> singleInputTags = new AtomicReference<>(Collections.emptyMap()); // cache for tag -> { tag }

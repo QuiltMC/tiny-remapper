@@ -566,7 +566,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 				}
 
 				// Only check for invalid identifiers, keyword check is performed below
-				if (!isValidJavaIdentifier(varName)) {
+				if (!isValidJavaIdentifier(varName) || !isValidLvName(varName)) {
 					varName = isArg ? "arg" : "lv"; // lv instead of var to avoid confusion with Java 10's var keyword
 				}
 
