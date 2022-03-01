@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016, 2018 Player, asie
+ * Copyright (c) 2016, 2022 FabricMC
  * Copyright (C) 2021 QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -226,14 +227,14 @@ public final class TinyUtils {
 		String line;
 
 		while ((line = reader.readLine()) != null) {
-			String[] splitLine = line.split("\t");
+			String[] splitLine = line.split("\t", -1);
 			if (splitLine.length < 2) continue;
 
 			String type = splitLine[0];
 
 			if ("CLASS".equals(type)) {
 				out.acceptClass(splitLine[1 + fromIndex], splitLine[1 + toIndex]);
-				if (obfFrom != null) obfFrom.put(splitLine[1], splitLine[1 + fromIndex]);
+				if (obfFrom != null && !splitLine[1 + fromIndex].isEmpty()) obfFrom.put(splitLine[1], splitLine[1 + fromIndex]);
 			} else {
 				boolean isMethod;
 
@@ -251,10 +252,12 @@ public final class TinyUtils {
 				String nameTo = splitLine[3 + toIndex];
 				Member member = new Member(owner, name, desc);
 
-				if (isMethod) {
-					out.acceptMethod(member, nameTo);
-				} else {
-					out.acceptField(member, nameTo);
+				if (!nameTo.isEmpty()) {
+					if (isMethod) {
+						out.acceptMethod(member, nameTo);
+					} else {
+						out.acceptField(member, nameTo);
+					}
 				}
 			}
 		}
