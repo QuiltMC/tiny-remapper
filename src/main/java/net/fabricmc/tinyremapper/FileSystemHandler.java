@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2016, 2018 Player, asie
+ * Copyright (c) 2019, 2022 FabricMC
  * Copyright (C) 2021 QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
@@ -68,7 +69,7 @@ public final class FileSystemHandler {
 		}
 	}
 
-	public static  void close(FileSystem fs) throws IOException {
+	public static void close(FileSystem fs) throws IOException {
 		synchronized (fsRefs) {
 			Integer count = fsRefs.get(fs);
 			if (count == null || count == 0) throw new IllegalStateException("fs "+fs+" never opened via FileSystemHandler");
