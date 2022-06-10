@@ -19,9 +19,7 @@
 package net.fabricmc.tinyremapper;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileSystem;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -374,7 +372,7 @@ public class TinyRemapper {
 	private CompletableFuture<List<ClassInstance>> read(Path[] inputs, boolean isInput, InputTag tag) {
 		InputTag[] tags = singleInputTags.get().get(tag);
 		List<CompletableFuture<List<ClassInstance>>> futures = new ArrayList<>();
-		List<FileSystem> fsToClose = Collections.synchronizedList(new ArrayList<>());
+		List<FileSystemReference> fsToClose = Collections.synchronizedList(new ArrayList<>());
 
 		for (Path input : inputs) {
 			futures.addAll(read(input, isInput, tags, true, fsToClose));
@@ -400,9 +398,9 @@ public class TinyRemapper {
 		}
 
 		return ret.whenComplete((res, exc) -> {
-			for (FileSystem fs : fsToClose) {
+			for (FileSystemReference fs : fsToClose) {
 				try {
-					FileSystemHandler.close(fs);
+					fs.close();
 				} catch (IOException e) {
 					// ignore
 				}
@@ -454,7 +452,7 @@ public class TinyRemapper {
 	}
 
 	private List<CompletableFuture<List<ClassInstance>>> read(final Path file, boolean isInput, InputTag[] tags,
-			boolean saveData, final List<FileSystem> fsToClose) {
+			boolean saveData, final List<FileSystemReference> fsToClose) {
 		try {
 			return read(file, isInput, tags, file, saveData, fsToClose);
 		} catch (IOException e) {
@@ -463,7 +461,7 @@ public class TinyRemapper {
 	}
 
 	private List<CompletableFuture<List<ClassInstance>>> read(final Path file, boolean isInput, InputTag[] tags, final Path srcPath,
-			final boolean saveData, final List<FileSystem> fsToClose) throws IOException {
+			final boolean saveData, final List<FileSystemReference> fsToClose) throws IOException {
 		List<CompletableFuture<List<ClassInstance>>> ret = new ArrayList<>();
 
 		Files.walkFileTree(file, new SimpleFileVisitor<Path>() {
@@ -496,15 +494,14 @@ public class TinyRemapper {
 	}
 
 	private List<ClassInstance> readFile(Path file, boolean isInput, InputTag[] tags, final Path srcPath,
-			List<FileSystem> fsToClose) throws IOException, URISyntaxException {
+			List<FileSystemReference> fsToClose) throws IOException, URISyntaxException {
 		List<ClassInstance> ret = new ArrayList<ClassInstance>();
 
 		if (file.toString().endsWith(".class")) {
 			ClassInstance res = analyze(isInput, tags, srcPath, file);
 			if (res != null) ret.add(res);
 		} else {
-			URI uri = new URI("jar:"+file.toUri().toString());
-			FileSystem fs = FileSystemHandler.open(uri);
+			FileSystemReference fs = FileSystemReference.openJar(file);
 			fsToClose.add(fs);
 
 			Files.walkFileTree(fs.getPath("/"), new SimpleFileVisitor<Path>() {
