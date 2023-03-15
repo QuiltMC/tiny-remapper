@@ -31,11 +31,12 @@ public class TinyRemapperConfiguration {
 	private boolean renameInvalidLocals;
 	private Pattern invalidLvNamePattern;
 	private boolean inferNameFromSameLvIndex;
+	private int asmVersion;
 
 	public TinyRemapperConfiguration(boolean removeFrames, boolean ignoreConflicts, boolean resolveMissing,
-				boolean checkPackageAccess, boolean fixPackageAccess, boolean rebuildSourceFilenames,
-				boolean skipLocalMapping, boolean renameInvalidLocals, Pattern invalidLvNamePattern,
-				boolean inferNameFromSameLvIndex) {
+									 boolean checkPackageAccess, boolean fixPackageAccess, boolean rebuildSourceFilenames,
+									 boolean skipLocalMapping, boolean renameInvalidLocals, Pattern invalidLvNamePattern,
+									 boolean inferNameFromSameLvIndex, int asmVersion) {
 		this.removeFrames = removeFrames;
 		this.ignoreConflicts = ignoreConflicts;
 		this.resolveMissing = resolveMissing;
@@ -46,6 +47,7 @@ public class TinyRemapperConfiguration {
 		this.renameInvalidLocals = renameInvalidLocals;
 		this.invalidLvNamePattern = invalidLvNamePattern;
 		this.inferNameFromSameLvIndex = inferNameFromSameLvIndex;
+		this.asmVersion = asmVersion;
 	}
 
 	public boolean removeFrames() {
@@ -94,6 +96,10 @@ public class TinyRemapperConfiguration {
 		return this.inferNameFromSameLvIndex;
 	}
 
+	public int getAsmVersion() {
+		return asmVersion;
+	}
+
 	public void setRemoveFrames(boolean removeFrames) {
 		this.removeFrames = removeFrames;
 	}
@@ -132,5 +138,9 @@ public class TinyRemapperConfiguration {
 
 	public void setInferNameFromSameLvIndex(boolean inferNameFromSameLvIndex) {
 		this.inferNameFromSameLvIndex = inferNameFromSameLvIndex;
+	}
+
+	public void setAsmVersion(int asmVersion) {
+		this.asmVersion = asmVersion;
 	}
 }

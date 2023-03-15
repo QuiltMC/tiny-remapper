@@ -720,7 +720,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 		protected final AsmRemapper remapper;
 
 		AsmAnnotationRemapper(String descriptor, AnnotationVisitor annotationVisitor, AsmRemapper remapper) {
-			super(Opcodes.ASM9, annotationVisitor);
+			super(remapper.tr.configuration.getAsmVersion(), annotationVisitor);
 			this.descriptor = descriptor;
 			this.remapper = remapper;
 		}

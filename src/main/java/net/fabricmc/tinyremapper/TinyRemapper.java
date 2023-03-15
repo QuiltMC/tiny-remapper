@@ -252,7 +252,7 @@ public class TinyRemapper {
 		private final List<ApplyVisitorProvider> preApplyVisitors = new ArrayList<>();
 		private final List<ApplyVisitorProvider> postApplyVisitors = new ArrayList<>();
 		private Remapper extraRemapper;
-		private TinyRemapperConfiguration configuration = new TinyRemapperConfiguration(false, false, false, false, false, false, false, false, null, false);
+		private TinyRemapperConfiguration configuration = new TinyRemapperConfiguration(false, false, false, false, false, false, false, false, null, false, Opcodes.ASM9);
 	}
 
 	public interface Extension {
@@ -563,7 +563,7 @@ public class TinyRemapper {
 
 		final ClassInstance ret = new ClassInstance(this, isInput, tags, srcPath, isInput ? data : null);
 
-		reader.accept(new ClassVisitor(Opcodes.ASM9) {
+		reader.accept(new ClassVisitor(configuration.getAsmVersion()) {
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 				int mrjVersion = analyzeMrjVersion(file, name);
@@ -1097,7 +1097,7 @@ public class TinyRemapper {
 		ClassReader reader = new ClassReader(data);
 		ClassWriter writer = new ClassWriter(0);
 
-		reader.accept(new ClassVisitor(Opcodes.ASM9, writer) {
+		reader.accept(new ClassVisitor(configuration.getAsmVersion(), writer) {
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
 				if (makeClsPublic) {
