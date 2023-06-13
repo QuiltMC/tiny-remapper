@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2016, 2018 Player, asie
- * Copyright (C) 2021 QuiltMC
+ * Copyright (c) 2016, 2018, Player, asie
+ * Copyright (c) 2021, 2023, FabricMC
+ * Copyright (C) 2021, 2023, QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,6 +22,7 @@ package net.fabricmc.tinyremapper.extension.mixin.common.data;
 public final class Message {
 	public static final String CANNOT_RESOLVE_CLASS = "Cannot resolve class %s";
 	public static final String CONFLICT_MAPPING = "Conflict mapping detected, %s -> %s.";
+	public static final String MULTIPLE_MAPPING_CHOICES = "Multiple conflicting mapping choices found for %s, which can be remapped to %s or %s. Such issues can be resolved by using fully qualified selectors.";
 	public static final String NO_MAPPING_NON_RECURSIVE = "Cannot remap %s because it does not exists in any of the targets %s";
 	public static final String NO_MAPPING_RECURSIVE = "Cannot remap %s because it does not exists in any of the targets %s or their parents.";
 	public static final String NOT_FULLY_QUALIFIED = "%s is not fully qualified.";
