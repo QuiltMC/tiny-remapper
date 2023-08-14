@@ -101,6 +101,11 @@ public class TinyRemapper {
 			return this;
 		}
 
+		public Builder withKnownIndyBsm(Set<String> entries) {
+			knownIndyBsm.addAll(entries);
+			return this;
+		}
+
 		public Builder propagatePrivate(boolean value) {
 			propagatePrivate = value;
 			return this;
@@ -229,7 +234,7 @@ public class TinyRemapper {
 		public TinyRemapper build() {
 			TinyRemapper remapper = new TinyRemapper(mappingProviders, ignoreFieldDesc, threadCount,
 					keepInputData,
-					forcePropagation, propagatePrivate,
+					forcePropagation, knownIndyBsm, propagatePrivate,
 					propagateBridges, propagateRecordComponents,
 					configuration,
 					analyzeVisitors, stateProcessors, preApplyVisitors, postApplyVisitors,
@@ -242,6 +247,7 @@ public class TinyRemapper {
 		private boolean ignoreFieldDesc;
 		private int threadCount;
 		private final Set<String> forcePropagation = new HashSet<>();
+		private final Set<String> knownIndyBsm = new HashSet<>();
 		private boolean keepInputData = false;
 		private boolean propagatePrivate = false;
 		private LinkedMethodPropagation propagateBridges = LinkedMethodPropagation.DISABLED;
@@ -273,7 +279,7 @@ public class TinyRemapper {
 	private TinyRemapper(Collection<IMappingProvider> mappingProviders, boolean ignoreFieldDesc,
 			int threadCount,
 			boolean keepInputData,
-			Set<String> forcePropagation, boolean propagatePrivate,
+			Set<String> forcePropagation, Set<String> knownIndyBsm, boolean propagatePrivate,
 			LinkedMethodPropagation propagateBridges, LinkedMethodPropagation propagateRecordComponents,
 			TinyRemapperConfiguration configuration,
 			List<AnalyzeVisitorProvider> analyzeVisitors, List<StateProcessor> stateProcessors,
@@ -285,6 +291,7 @@ public class TinyRemapper {
 		this.keepInputData = keepInputData;
 		this.threadPool = Executors.newFixedThreadPool(this.threadCount);
 		this.forcePropagation = forcePropagation;
+		this.knownIndyBsm = knownIndyBsm;
 		this.propagatePrivate = propagatePrivate;
 		this.propagateBridges = propagateBridges;
 		this.propagateRecordComponents = propagateRecordComponents;
@@ -1302,6 +1309,7 @@ public class TinyRemapper {
 
 	private final boolean keepInputData;
 	final Set<String> forcePropagation;
+	final Set<String> knownIndyBsm;
 	final boolean propagatePrivate;
 	final LinkedMethodPropagation propagateBridges;
 	final LinkedMethodPropagation propagateRecordComponents;

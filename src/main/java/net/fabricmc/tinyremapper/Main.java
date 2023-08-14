@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2016, 2018 Player, asie
- * Copyright (C) 2021 QuiltMC
+ * Copyright (c) 2016, 2023, FabricMC
+ * Copyright (C) 2021, 2023, QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,8 +21,11 @@ package net.fabricmc.tinyremapper;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -301,6 +305,42 @@ public final class Main implements Callable<Integer> {
 		threads = value;
 	}
 
+
+	private final Set<String> knownIndyBsm = new HashSet<String>(){{
+		this.add("java/lang/invoke/StringConcatFactory");
+		this.add("java/lang/runtime/ObjectMethods");
+	}};
+	/**
+	 * Add a file with known indybsm factories
+	 *
+	 * @param knownIndyBsmFile
+	 */
+	@Option(names = {"--knownindybsm"},
+			description = "Path to a file with known indybsm factories")
+	private void setKnownIndyBsm(File knownIndyBsmFile) {
+		if (!knownIndyBsmFile.canRead()) {
+			throw new ParameterException(spec.commandLine(),
+					"Can't read knownIndyBsm file " + knownIndyBsmFile + ".");
+		}
+
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(knownIndyBsmFile.toPath()), StandardCharsets.UTF_8))) {
+			String line;
+
+			while ((line = reader.readLine()) != null) {
+				line = line.trim();
+
+				if (line.isEmpty() || line.charAt(0) == '#') continue;
+
+				knownIndyBsm.add(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new ParameterException(spec.commandLine(),
+					"An error occurred while parsing the knownIndyBsm file.");
+		}
+	}
+
+
 	/**
 	 * The main function of the CLI.
 	 *
@@ -317,6 +357,7 @@ public final class Main implements Callable<Integer> {
 				.withMappings(TinyUtils.createTinyMappingProvider(mappings, fromMapping, toMapping))
 				.ignoreFieldDesc(ignoreFieldDesc)
 				.withForcedPropagation(forcePropagation)
+				.withKnownIndyBsm(knownIndyBsm)
 				.propagatePrivate(propagatePrivate)
 				.propagateBridges(propagateBridges)
 				.removeFrames(removeFrames)

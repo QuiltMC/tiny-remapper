@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2016, 2018 Player, asie
- * Copyright (C) 2021 QuiltMC
+ * Copyright (c) 2016, 2018, Player, asie
+ * Copyright (c) 2018, 2023, FabricMC
+ * Copyright (C) 2021, 2023, QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -53,7 +55,6 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 			boolean rebuildSourceFilenames, boolean checkPackageAccess, boolean skipLocalMapping,
 			boolean renameInvalidLocals, Pattern invalidLvNamePattern, boolean inferNameFromSameLvIndex) {
 		super(cv, remapper);
-
 		this.rebuildSourceFilenames = rebuildSourceFilenames;
 		this.checkPackageAccess = checkPackageAccess;
 		this.skipLocalMapping = skipLocalMapping;
@@ -179,6 +180,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 	}
 
 	private static class AsmMethodRemapper extends MethodRemapper {
+		private final TinyRemapper tr;
 		AsmMethodRemapper(MethodVisitor methodVisitor,
 				AsmRemapper remapper,
 				String owner,
@@ -189,7 +191,6 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 				Pattern invalidLvNamePattern,
 				boolean inferNameFromSameLvIndex) {
 			super(methodNode != null ? methodNode : methodVisitor, remapper);
-
 			this.owner = owner;
 			this.methodNode = methodNode;
 			this.output = methodVisitor;
@@ -198,6 +199,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 			this.renameInvalidLocals = renameInvalidLocals;
 			this.invalidLvNamePattern = invalidLvNamePattern;
 			this.inferNameFromSameLvIndex = inferNameFromSameLvIndex;
+			this.tr = remapper.tr;
 		}
 
 		@Override
@@ -261,7 +263,7 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 
 		@Override
 		public void visitInvokeDynamicInsn(String name, String descriptor, Handle bootstrapMethodHandle, Object... bootstrapMethodArguments) {
-			Handle implemented = getLambdaImplementedMethod(name, descriptor, bootstrapMethodHandle, bootstrapMethodArguments);
+			Handle implemented = getLambdaImplementedMethod(name, descriptor, bootstrapMethodHandle, tr.knownIndyBsm, bootstrapMethodArguments);
 
 			if (implemented != null) {
 				name = remapper.mapMethodName(implemented.getOwner(), implemented.getName(), implemented.getDesc());
@@ -279,12 +281,11 @@ final class AsmClassRemapper extends VisitTrackingClassRemapper {
 					bootstrapMethodArguments);
 		}
 
-		private static Handle getLambdaImplementedMethod(String name, String desc, Handle bsm, Object... bsmArgs) {
+		private static Handle getLambdaImplementedMethod(String name, String desc, Handle bsm, Set<String> knownIndyBsm, Object... bsmArgs) {
 			if (isJavaLambdaMetafactory(bsm)) {
 				assert desc.endsWith(";");
 				return new Handle(Opcodes.H_INVOKEINTERFACE, desc.substring(desc.lastIndexOf(')') + 2, desc.length() - 1), name, ((Type) bsmArgs[0]).getDescriptor(), true);
-			} else if (bsm.getOwner().equals("java/lang/invoke/StringConcatFactory")
-					|| bsm.getOwner().equals("java/lang/runtime/ObjectMethods")) {
+			} else if (knownIndyBsm.contains(bsm.getOwner())) {
 				return null;
 			} else {
 				System.out.printf("unknown invokedynamic bsm: %s/%s%s (tag=%d iif=%b)%n", bsm.getOwner(), bsm.getName(), bsm.getDesc(), bsm.getTag(), bsm.isInterface());
