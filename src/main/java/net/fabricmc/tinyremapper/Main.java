@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2016, 2018 Player, asie
- * Copyright (c) 2016, 2023, FabricMC
- * Copyright (C) 2021, 2023, QuiltMC
+ * Copyright (C) 2018, 2023 FabricMC
+ * Copyright (C) 2016, 2023 QuiltMC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
